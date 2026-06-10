@@ -2,9 +2,10 @@ import { Gamepad2, Play, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { ShelfStatus, Shelf } from "@prisma/client"
 import Image from "next/image"
 import Link from "next/link"
+import DashboardCharts from "./DashboardCharts"
 
 interface DashboardStatsProps {
-    stats: Record<ShelfStatus, number>
+    stats: Record<ShelfStatus, { count: number; playtime: number; rating: number }>
     totalGames: number
     topGames: Shelf[]
 }
@@ -12,10 +13,10 @@ interface DashboardStatsProps {
 export default function DashboardStats({ stats, totalGames, topGames }: DashboardStatsProps) {
     const statCards = [
         { title: "Total Games", value: totalGames, icon: Gamepad2, color: "text-zinc-400" },
-        { title: "Playing", value: stats.PLAYING || 0, icon: Play, color: "text-zinc-400" },
-        { title: "Completed", value: stats.COMPLETED || 0, icon: CheckCircle2, color: "text-zinc-400" },
-        { title: "Planned", value: stats.PLANNED || 0, icon: Clock, color: "text-zinc-400" },
-        { title: "Dropped", value: stats.DROPPED || 0, icon: XCircle, color: "text-zinc-400" },
+        { title: "Playing", value: stats.PLAYING?.count || 0, icon: Play, color: "text-zinc-400" },
+        { title: "Completed", value: stats.COMPLETED?.count || 0, icon: CheckCircle2, color: "text-zinc-400" },
+        { title: "Planned", value: stats.PLANNED?.count || 0, icon: Clock, color: "text-zinc-400" },
+        { title: "Dropped", value: stats.DROPPED?.count || 0, icon: XCircle, color: "text-zinc-400" },
     ]
 
     return (
@@ -35,6 +36,9 @@ export default function DashboardStats({ stats, totalGames, topGames }: Dashboar
                     )
                 })}
             </div>
+
+            {/* Visual Charts */}
+            <DashboardCharts stats={stats} />
 
             {/* Top Games Section */}
             {topGames.length > 0 && (

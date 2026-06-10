@@ -1,7 +1,7 @@
 import { getDashboardData } from '@/services/shelf.service'
 import { FadeIn } from '@/components/AnimatedSection'
 import DashboardStats from '@/components/dashboard/DashboardStats'
-import { ShelfStatus } from '@prisma/client'
+import { ShelfStatus, Shelf } from '@prisma/client'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 
@@ -47,7 +47,7 @@ export default async function SharedDashboardPage({ params }: { params: Promise<
                     )}
 
                     <div className="space-y-2 lg:space-y-3">
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 tracking-tight">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-white via-white/90 to-white/60 tracking-tight">
                             {user.name || 'User'}&apos;s Dashboard
                         </h1>
                         <p className="text-lg text-zinc-400 font-medium">Gaming Journey & Collection</p>
@@ -55,9 +55,9 @@ export default async function SharedDashboardPage({ params }: { params: Promise<
                 </div>
 
                 <DashboardStats
-                    stats={stats as Record<ShelfStatus, number>}
+                    stats={stats as Record<ShelfStatus, { count: number; playtime: number; rating: number }>}
                     totalGames={totalGames}
-                    topGames={topGames as any}
+                    topGames={topGames as Shelf[]}
                 />
             </main>
         </FadeIn>

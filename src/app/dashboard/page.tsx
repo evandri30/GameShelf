@@ -37,7 +37,7 @@ export default async function DashboardPage() {
                 </div>
 
                 <DashboardStats
-                    stats={data.stats as Record<ShelfStatus, number>}
+                    stats={data.stats as Record<ShelfStatus, { count: number; playtime: number; rating: number }>}
                     totalGames={data.totalGames}
                     topGames={data.topGames}
                 />
