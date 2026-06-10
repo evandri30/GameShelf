@@ -65,6 +65,12 @@ export async function getDashboardData(userId: string) {
         where: { userId },
         _count: {
             id: true
+        },
+        _sum: {
+            playtime: true
+        },
+        _avg: {
+            rating: true
         }
     })
 
@@ -90,9 +96,13 @@ export async function getDashboardData(userId: string) {
     return {
         user,
         stats: stats.reduce((acc, curr) => {
-            acc[curr.status] = curr._count.id
+            acc[curr.status] = {
+                count: curr._count.id,
+                playtime: curr._sum.playtime || 0,
+                rating: curr._avg.rating || 0
+            }
             return acc
-        }, {} as Record<ShelfStatus, number>),
+        }, {} as Record<ShelfStatus, { count: number; playtime: number; rating: number }>),
         totalGames,
         topGames
     }
