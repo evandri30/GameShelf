@@ -15,23 +15,27 @@ export default function Footer() {
                 {/* Links */}
                 <div className="flex gap-6">
                     <a
-                        href="#"
+                        href="mailto:evandriridhoh@gmail.com"
                         className="hover:text-white transition"
                         aria-label='Email Us'
                     >
                         <Mail />
                     </a>
                     <a
-                        href="#"
+                        href="https://github.com/evandri30"
                         className="hover:text-white transition"
                         aria-label='Github Account'
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
                         <Github />
                     </a>
                     <a
-                        href="#"
+                        href="https://linkedin.com/in/evandriridho"
                         className="hover:text-white transition"
                         aria-label='Connect me'
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
                         <Linkedin />
                     </a>
