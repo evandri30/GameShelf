@@ -16,8 +16,10 @@ export default async function GamePage({ searchParams }: PageProps) {
     const currentPage = Number(params.page) || 1;
     const searchQuery = params.search || "";
 
-    const data = searchQuery ? await searchGames(searchQuery, currentPage) : await getGames(currentPage)
-    const gotyData = !searchQuery && currentPage === 1 ? await getGOTYGames() : null
+    const [data, gotyData] = await Promise.all([
+        searchQuery ? searchGames(searchQuery, currentPage) : getGames(currentPage),
+        !searchQuery && currentPage === 1 ? getGOTYGames() : Promise.resolve(null)
+    ]);
 
     const totalPages = Math.ceil(data.count / 20);
     const hasNext = data.next !== null;

@@ -1,6 +1,12 @@
 import type { GameDetailProps, GameResponseProps } from "@/types";
 import { GameDetailSchema, GameResponseSchema } from "@/schemas/game.schema"
 import { gotyWinners } from "@/constants/gotywinner"
+import { unstable_cache } from "next/cache"
+import dns from "node:dns"
+
+if (typeof window === 'undefined') {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 const BASE_URL = "https://api.rawg.io/api";
 const API_KEY = process.env.RAWG_API_KEY;
@@ -47,25 +53,29 @@ export async function searchGames(query: string, page: number = 1, pageSize: num
     return GameResponseSchema.parse(data)
 }
 
-export async function getGOTYGames(): Promise<GameResponseProps> {
-    const promises = gotyWinners.map(slug => fetch(`${BASE_URL}/games/${slug}?key=${API_KEY}`,
-        {
-            next: { revalidate: 3600 }
-        })
-        .then(res => {
-            if (!res.ok) throw new Error(`Failed to fetch game`)
-            return res.json()
-        })
-    )
+export const getGOTYGames = unstable_cache(
+    async (): Promise<GameResponseProps> => {
+        const promises = gotyWinners.map(slug => fetch(`${BASE_URL}/games/${slug}?key=${API_KEY}`,
+            {
+                next: { revalidate: 3600 }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error(`Failed to fetch game`)
+                return res.json()
+            })
+        )
 
-    const results = await Promise.all(promises)
+        const results = await Promise.all(promises)
 
-    const response = {
-        count: results.length,
-        next: null,
-        previous: null,
-        results: results
-    }
+        const response = {
+            count: results.length,
+            next: null,
+            previous: null,
+            results: results
+        }
 
-    return GameResponseSchema.parse(response)
-}
+        return GameResponseSchema.parse(response)
+    },
+    ['goty-games-cache'],
+    { revalidate: 86400 } 
+)

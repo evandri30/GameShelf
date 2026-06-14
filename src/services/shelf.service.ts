@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { ShelfStatus } from '@prisma/client'
+import { cache } from 'react'
 
 export async function getUserShelf(userId: string) {
     return await prisma.shelf.findMany({
@@ -8,7 +9,7 @@ export async function getUserShelf(userId: string) {
     })
 }
 
-export async function getUserBySlug(userId: string, slug: string) {
+export const getUserBySlug = cache(async (userId: string, slug: string) => {
     return await prisma.shelf.findUnique({
         where: {
             userId_slug: {
@@ -25,7 +26,7 @@ export async function getUserBySlug(userId: string, slug: string) {
             }
         }
     })
-}
+})
 
 export async function createUserShelf(userId: string, rawgId: number, title: string, slug: string, backgroundImage: string | null) {
     return await prisma.shelf.create({
