@@ -1,5 +1,3 @@
-'use client';
-
 import FeatureCard from "@/components/landing/FeatureCard";
 import HowItsWork from "@/components/landing/HowItsWork";
 import FAQ from "@/components/landing/FAQ";
