@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ShelfStatus } from '@prisma/client'
+import { ShelfStatus } from '@/generated/prisma/browser'
 import { cache } from 'react'
 
 export async function getUserShelf(userId: string) {
