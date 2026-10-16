@@ -108,6 +108,13 @@ export default function AuthPage() {
     }
 
     useEffect(() => {
+        const error = new URLSearchParams(window.location.search).get('error')
+        if (error === 'OAuthAccountNotLinked') {
+            toast.error("This email is already registered with another sign-in method")
+        }
+    }, [])
+
+    useEffect(() => {
         if (isLogin) {
             emailRef.current?.focus()
         } else {

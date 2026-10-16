@@ -69,6 +69,11 @@ export const { handlers, auth } = NextAuth({
                         where: { email: user.email }
                     });
 
+                    // Don't silently sign into an account that was created with another method
+                    if (existingUser && existingUser.provider !== account.provider) {
+                        return "/auth?error=OAuthAccountNotLinked";
+                    }
+
                     if (!existingUser) {
                         await prisma.user.create({
                             data: {
