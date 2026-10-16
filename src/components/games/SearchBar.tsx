@@ -92,7 +92,7 @@ export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
             </form>
 
             {searchQuery && (
-                <p className='mt-4 text-sm text-zinc-500'>Found {totalGames.toLocaleString()} result(s) for "{searchQuery}"</p>
+                <p className='mt-4 text-sm text-zinc-500'>Found {totalGames.toLocaleString()} result(s) for &quot;{searchQuery}&quot;</p>
             )}
         </section>
     )
