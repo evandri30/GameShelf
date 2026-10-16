@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ShelfStatus } from "@prisma/client"
+import { ShelfStatus } from '@/generated/prisma/browser'
 import { 
     ResponsiveContainer, 
     PieChart, 

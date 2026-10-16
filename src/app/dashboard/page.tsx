@@ -1,10 +1,10 @@
-import { auth } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { getDashboardData } from '@/services/shelf.service'
 import { FadeIn } from '@/components/AnimatedSection'
 import DashboardStats from '@/components/dashboard/DashboardStats'
 import ShareButton from '@/components/dashboard/ShareButton'
-import { ShelfStatus } from '@prisma/client'
+import { ShelfStatus } from '@/generated/prisma/browser'
 
 export default async function DashboardPage() {
     const session = await auth()

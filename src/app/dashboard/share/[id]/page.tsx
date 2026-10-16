@@ -1,7 +1,7 @@
 import { getDashboardData } from '@/services/shelf.service'
 import { FadeIn } from '@/components/AnimatedSection'
 import DashboardStats from '@/components/dashboard/DashboardStats'
-import { ShelfStatus, Shelf } from '@prisma/client'
+import { ShelfStatus, Shelf } from '@/generated/prisma/browser'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 

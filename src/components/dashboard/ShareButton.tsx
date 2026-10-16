@@ -10,7 +10,7 @@ export default function ShareButton({ userId }: { userId: string }) {
         try {
             await navigator.clipboard.writeText(url)
             toast.success("Dashboard link copied to clipboard!")
-        } catch (err) {
+        } catch {
             toast.error("Failed to copy link.")
         }
     }

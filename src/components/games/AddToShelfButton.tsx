@@ -28,6 +28,11 @@ export default function AddToShelfButton({ rawgId, title, slug, backgroundImage 
                 body: JSON.stringify({ rawgId, title, slug, backgroundImage })
             })
 
+            if (res.status === 409) {
+                toast.error("Game already in shelf")
+                return
+            }
+
             if (!res.ok) {
                 throw new Error("Failed to add game")
             }
@@ -36,7 +41,7 @@ export default function AddToShelfButton({ rawgId, title, slug, backgroundImage 
             toast.success("Game added to shelf successfully")
         } catch (error) {
             console.log("error : ", error)
-            toast.error("Game already in shelf")
+            toast.error("Failed to add game")
         } finally {
             setLoading(false)
         }

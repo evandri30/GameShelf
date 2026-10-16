@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GameShelf
+
+GameShelf helps you explore popular games, view details, and keep track of what you play. Browse games from the [RAWG](https://rawg.io) database, add them to your shelf, set status, rating, playtime, and notes, then share a dashboard of your gaming stats.
+
+## Features
+
+- Browse and search games, plus a Game of the Year showcase
+- Personal shelf with status (Planned, Playing, Completed, Dropped), rating, playtime, and caption
+- Dashboard with charts and top games, shareable via a public link
+- Email/password sign-in
+
+## Tech Stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + React 19
+- [Auth.js / NextAuth v5](https://authjs.dev)
+- [Prisma 7](https://www.prisma.io) + PostgreSQL (`@prisma/adapter-pg`)
+- Tailwind CSS 4, Motion, Recharts, Zod
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20.19+
+- PostgreSQL database
+- RAWG API key
+
+### Setup
 
 ```bash
+npm install                # also runs `prisma generate`
+cp .env.example .env       # then fill in the values
+npx prisma migrate deploy  # apply database migrations
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Secret for signing sessions (`npx auth secret`) |
+| `RAWG_API_KEY` | API key from [rawg.io/apidocs](https://rawg.io/apidocs) |
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | Run ESLint |
+| `npx prisma migrate dev` | Create/apply a migration during development |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+prisma/            Prisma schema and migrations
+src/app/           Routes (pages and API handlers)
+src/auth.ts        Auth.js configuration
+src/components/    UI components
+src/lib/           Prisma client and RAWG API helpers
+src/services/      Database queries
+src/schemas/       Zod schemas
+src/generated/     Generated Prisma client (gitignored)
+```

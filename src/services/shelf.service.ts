@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ShelfStatus } from '@prisma/client'
+import { ShelfStatus } from '@/generated/prisma/browser'
 import { cache } from 'react'
 
 export async function getUserShelf(userId: string) {
@@ -61,38 +61,38 @@ export async function getDashboardData(userId: string) {
 
     if (!user) return null
 
-    const stats = await prisma.shelf.groupBy({
-        by: ['status'],
-        where: { userId },
-        _count: {
-            id: true
-        },
-        _sum: {
-            playtime: true
-        },
-        _avg: {
-            rating: true
-        }
-    })
-
-    const topGames = await prisma.shelf.findMany({
-        where: {
-            userId,
-            status: {
-                notIn: ['PLANNED', 'DROPPED']
+    const [stats, topGames, totalGames] = await Promise.all([
+        prisma.shelf.groupBy({
+            by: ['status'],
+            where: { userId },
+            _count: {
+                id: true
             },
-        },
-        orderBy: [
-            { rating: 'desc' },
-            { playtime: 'desc' },
-            { createdAt: 'desc' }
-        ],
-        take: 5
-    })
-
-    const totalGames = await prisma.shelf.count({
-        where: { userId }
-    })
+            _sum: {
+                playtime: true
+            },
+            _avg: {
+                rating: true
+            }
+        }),
+        prisma.shelf.findMany({
+            where: {
+                userId,
+                status: {
+                    notIn: ['PLANNED', 'DROPPED']
+                },
+            },
+            orderBy: [
+                { rating: 'desc' },
+                { playtime: 'desc' },
+                { createdAt: 'desc' }
+            ],
+            take: 5
+        }),
+        prisma.shelf.count({
+            where: { userId }
+        })
+    ])
 
     return {
         user,

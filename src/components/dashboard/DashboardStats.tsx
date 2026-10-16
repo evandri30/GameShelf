@@ -1,5 +1,5 @@
 import { Gamepad2, Play, CheckCircle2, XCircle, Clock } from "lucide-react"
-import { ShelfStatus, Shelf } from "@prisma/client"
+import { ShelfStatus, Shelf } from '@/generated/prisma/browser'
 import Image from "next/image"
 import Link from "next/link"
 import DashboardCharts from "./DashboardCharts"
