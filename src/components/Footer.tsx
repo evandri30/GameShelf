@@ -1,4 +1,5 @@
-import { Github, Mail, Linkedin } from 'lucide-react'
+import { Mail } from 'lucide-react'
+import { GithubIcon, LinkedinIcon } from './icons/BrandIcons'
 
 export default function Footer() {
     return (
@@ -28,7 +29,7 @@ export default function Footer() {
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <Github />
+                        <GithubIcon />
                     </a>
                     <a
                         href="https://linkedin.com/in/evandriridho"
@@ -37,7 +38,7 @@ export default function Footer() {
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <Linkedin />
+                        <LinkedinIcon />
                     </a>
                 </div>
             </div>
