@@ -7,7 +7,7 @@ GameShelf helps you explore popular games, view details, and keep track of what 
 - Browse and search games, plus a Game of the Year showcase
 - Personal shelf with status (Planned, Playing, Completed, Dropped), rating, playtime, and caption
 - Dashboard with charts and top games, shareable via a public link
-- Sign in with email/password, GitHub, or Google
+- Email/password sign-in
 
 ## Tech Stack
 
@@ -22,7 +22,7 @@ GameShelf helps you explore popular games, view details, and keep track of what 
 
 - Node.js 20.19+
 - PostgreSQL database
-- RAWG API key, plus GitHub / Google OAuth credentials if you want social login
+- RAWG API key
 
 ### Setup
 
@@ -35,11 +35,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-For OAuth, set the callback URLs to:
-
-- GitHub: `http://localhost:3000/api/auth/callback/github`
-- Google: `http://localhost:3000/api/auth/callback/google`
-
 ## Environment Variables
 
 | Variable | Description |
@@ -47,8 +42,6 @@ For OAuth, set the callback URLs to:
 | `DATABASE_URL` | PostgreSQL connection string |
 | `AUTH_SECRET` | Secret for signing sessions (`npx auth secret`) |
 | `RAWG_API_KEY` | API key from [rawg.io/apidocs](https://rawg.io/apidocs) |
-| `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth app credentials |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth client credentials |
 
 ## Scripts
 
