@@ -2,9 +2,9 @@ import { z } from "zod"
 
 export const LoginSchema = z.object({
     email: z
-        .string()
-        .min(1, "Email is Required")
-        .email("Invalid email format"),
+        .email({
+            error: (issue) => issue.input === "" ? "Email is Required" : "Invalid email format"
+        }),
     password: z
         .string()
         .min(1, "Password is Required")
@@ -18,9 +18,9 @@ export const RegisterSchema = z.object({
         .min(3, "Name must be atleast 3 characters")
         .max(20, "Name is to long"),
     email: z
-        .string()
-        .min(1, "Email is required")
-        .email("Invalid email format"),
+        .email({
+            error: (issue) => issue.input === "" ? "Email is required" : "Invalid email format"
+        }),
     password: z
         .string()
         .min(1, "Password is required")

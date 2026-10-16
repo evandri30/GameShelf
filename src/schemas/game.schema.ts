@@ -4,7 +4,7 @@ export const GameSchema = z.object({
     id: z.number(),
     slug: z.string(),
     name: z.string(),
-    background_image: z.string().url().nullable(),
+    background_image: z.url().nullable(),
     rating: z.number().min(0).max(5),
     released: z.string().nullable(),
     metacritic: z.number().nullable(),
@@ -31,7 +31,7 @@ export const GameDetailSchema = z.object({
     slug: z.string(),
     name: z.string(),
     description: z.string(),
-    background_image: z.string().url().nullable(),
+    background_image: z.url().nullable(),
     rating: z.number(),
     rating_top: z.number(),
     metacritic: z.number().nullable(),
@@ -69,7 +69,7 @@ export const GameDetailSchema = z.object({
         name: z.string(),
         slug: z.string()
     })).nullable().transform(val => val ?? []),
-    website: z.string().url().nullable().catch(null)
+    website: z.url().nullable().catch(null)
 });
 
 export const GameResponseSchema = z.object({

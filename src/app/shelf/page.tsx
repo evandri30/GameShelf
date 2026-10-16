@@ -1,4 +1,4 @@
-import { auth } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/auth'
 import { FadeIn } from '@/components/AnimatedSection'
 import { getUserShelf } from '@/services/shelf.service'
 import PageHeader from '@/components/shelf/PageHeader'

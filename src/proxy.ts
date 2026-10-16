@@ -15,7 +15,7 @@ export async function proxy(req: NextRequest) {
     }
 
     // Kalau belum login
-    if (!token && (pathname.startsWith("/games") || pathname.startsWith("/shelf"))) {
+    if (!token && (pathname.startsWith("/games") || pathname.startsWith("/shelf") || (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/share")))) {
         return NextResponse.redirect(new URL("/", req.url))
     }
 
@@ -23,5 +23,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/", "/games/:path*", "/shelf/:path*"],
+    matcher: ["/", "/games/:path*", "/shelf/:path*", "/dashboard/:path*"],
 };
