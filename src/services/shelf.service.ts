@@ -27,14 +27,6 @@ export const getUserBySlug = cache(async (userId: string, slug: string) => {
                 userId,
                 slug
             }
-        },
-        include: {
-            user: {
-                select: {
-                    name: true,
-                    image: true
-                }
-            }
         }
     })
 })

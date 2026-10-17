@@ -32,7 +32,7 @@ export default function Header() {
                         <MoveRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
                     </Link>
                     <Link href="#features" className={buttonClass("secondary", "lg")}>
-                        See how it works
+                        See what you get
                     </Link>
                 </div>
 

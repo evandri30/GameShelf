@@ -1,8 +1,6 @@
 import FeatureCard from "@/components/landing/FeatureCard";
-import HowItsWork from "@/components/landing/HowItsWork";
 import FAQ from "@/components/landing/FAQ";
 import { features } from "@/constants/feature";
-import { howItsWork } from "@/constants/howitswork"
 import CTA from "@/components/landing/CTA";
 import Header from "@/components/landing/Header";
 import { SectionHeading } from "@/components/ui/Card";
@@ -22,16 +20,6 @@ export default function Home() {
               <FeatureCard key={feature.title} {...feature} />
             ))}
           </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="space-y-8">
-          <SectionHeading title="How it works" />
-          <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {howItsWork.map((step) => (
-              <HowItsWork key={step.no} {...step} />
-            ))}
-          </ol>
         </section>
 
         {/* FAQ */}

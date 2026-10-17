@@ -8,10 +8,10 @@ Dokumen ini berisi rencana rombak UI dan performance GameShelf, dari Fase 0 samp
 | 1 | Fondasi design system | ✅ Selesai |
 | 2 | Performance | ✅ Selesai |
 | 3 | Redesign per halaman | ✅ Selesai |
-| 4 | Bersih-bersih fitur gak relevan | ⏳ Sebagian (ikut kebawa Fase 3) |
+| 4 | Bersih-bersih fitur gak relevan | ✅ Selesai |
 | 5 | Fitur baru (dipilih satu-satu) | ⏳ Belum |
 
-Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Fase 1–2 sudah di-commit (`f2f3ea6`). Fase 3 **belum di-commit**.
+Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Fase 1–2 sudah di-commit (`f2f3ea6`), Fase 3 (`3afd92c`). Fase 4 **belum di-commit**.
 
 ---
 
@@ -290,16 +290,26 @@ Login/logout, quick-add, add dengan status, pindah status lewat menu (jumlah di 
 
 ---
 
-## Fase 4 — Yang Dihapus / Dirapikan ⏳
+## Fase 4 — Yang Dihapus / Dirapikan ✅
 
-- **Section "How It Works"** di landing: isinya dobel sama feature card. Hapus `components/landing/HowItsWork.tsx`, `constants/howitswork.ts`, dan tipe `HowItsWorkProps`.
-- **FAQ** dipangkas jadi 3 pertanyaan atau dihapus. Jawaban "share your collection" gak akurat, karena yang bisa di-share cuma dashboard.
-- ~~**Navigasi GOTY yang dobel tiga** (panah + titik + thumbnail strip) disisain satu aja.~~ ✅ Selesai di Fase 3.
-- ~~**Bar chart "Playtime by status"** diganti angka KPI total jam.~~ ✅ Selesai di Fase 3.
-- ~~Tombol "Learn More" yang link mati ke `/`.~~ ✅ Selesai di Fase 3.
-- **API route yang udah gak dipakai:** `/api/shelf`, `/api/shelf/[id]`, dan `/api/shelf/detail/[slug]`.
-- **Opsional:** ganti `react-toastify` dengan `sonner` yang lebih ringan.
-- **Sisa OAuth:** kolom `User.provider` di-drop lewat migration. `User.image` dipertahankan kalau mau fitur avatar nanti.
+| Item | Hasil |
+|---|---|
+| Section "How It Works" | ✅ Dihapus: `components/landing/HowItsWork.tsx`, `constants/howitswork.ts`, dan tipe `HowItsWorkProps`. Tombol hero diganti jadi "See what you get" (menuju `#features`). |
+| FAQ | ✅ Dipangkas jadi 3 pertanyaan (*What is GameShelf? / Is it free? / Can I share my shelf?*). Jawaban soal share sekarang akurat: yang bisa di-share itu **halaman Stats**. |
+| Navigasi GOTY dobel tiga | ✅ Selesai di Fase 3 |
+| Bar chart "Playtime by status" | ✅ Selesai di Fase 3 (diganti KPI total jam) |
+| Tombol "Learn More" link mati | ✅ Selesai di Fase 3 |
+| API route gak terpakai | ✅ Dihapus: `/api/shelf`, `/api/shelf/[id]`, dan `/api/shelf/detail/[slug]`, sekarang 404. Semua mutasi lewat server action di `src/app/shelf/actions.ts`. API yang tersisa cuma `/api/auth/[...nextauth]` dan `/api/auth/register`. |
+| Kolom `User.provider` | ✅ Di-drop lewat migration `20261017025317_drop_user_provider`. `User.image` tetap ada (dipakai avatar di halaman share, buat fitur avatar nanti). |
+| Data gak terpakai | ✅ `getUserBySlug` gak lagi `include: { user }`, dan field `user` dihapus dari `ShelfFDetailProps`. |
+| `react-toastify` → `sonner` | ⏭️ **Di-skip.** `react-toastify` cuma ~12,7KB gzip (JS 9,8KB + CSS 3KB), sedangkan `sonner` sekitar ~10KB. Hemat 2–3KB gak sepadan sama ngubah ~8 file. |
+
+**⚠️ Setelah pull / migration ini:**
+- Jalanin `npx prisma migrate dev` (atau `migrate deploy` di server).
+- Jalanin **`npx prisma generate`**. Prisma 7 gak lagi otomatis generate client setelah migrate.
+- **Restart `next dev`**. Dev server nyimpen instance Prisma client di `globalThis`, jadi sebelum di-restart dia masih nyari kolom `provider` dan register/login bakal error.
+
+**Ukuran JS setelah Fase 3–4** (mentah, belum gzip): `/auth` 848KB, `/games` 751KB, `/games/[slug]` 744KB, `/shelf` 751KB, `/shelf/[slug]` 749KB, `/dashboard` 740KB. Naik ~10KB dari Fase 2 karena ada fitur client baru (menu, quick-add, tab bar).
 
 ---
 
@@ -346,7 +356,8 @@ AUTH_TRUST_HOST=true npx next start -p 3100
 - **Server Component butuh session?** Pakai `getSession()`, bukan `auth()`.
 - **`new Date()`, `Math.random()`, `crypto` di server component** harus ada di dalam scope `"use cache"`, setelah `await connection()`, atau dipindah ke client component.
 - **`useSearchParams` / `usePathname`** di layout harus dibungkus `<Suspense>`.
-- **Mutasi data** lewat server action di `src/app/shelf/actions.ts`, bukan `fetch` ke `/api`.
+- **Mutasi data** lewat server action di `src/app/shelf/actions.ts`. Route `/api/shelf*` sudah dihapus.
+- **Habis migration Prisma:** `npx prisma generate`, lalu restart `next dev`.
 - **Warna** pakai token (`bg-surface`, `text-muted`, `text-accent`, …), jangan `zinc-*` atau hex langsung.
 - **Status shelf** (label/warna) selalu ambil dari `src/constants/status.ts`.
 - **Gambar RAWG** lewat `getCroppedImageUrl(url, width)`, dan selalu isi prop `sizes`. Gambar yang posisinya above the fold pakai `loading="eager"`.

@@ -11,9 +11,3 @@ export type FaqItemProps = {
     question: string;
     answer: string;
 }
-
-export type HowItsWorkProps = {
-    no: number;
-    title: string;
-    description: string;
-}

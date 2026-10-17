@@ -14,10 +14,6 @@ export type ShelfProps = {
 }
 
 export type ShelfFDetailProps = ShelfProps & {
-    user: {
-        name: string | null;
-        image: string | null;
-    }
     rawgId: number;
     createdAt: Date;
     updatedAt: Date;
