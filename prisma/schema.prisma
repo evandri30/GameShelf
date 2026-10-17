@@ -19,7 +19,11 @@ model User {
   password  String?
   name      String?
   image     String?
+  // public profile at /u/<username>; private until the owner turns it on
+  username  String   @unique
+  isPublic  Boolean  @default(false)
   shelves   Shelf[]
+  lists     ShelfList[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -36,13 +40,43 @@ model Shelf {
   rating    Int?        
   caption   String?     @db.Text
   playtime  Int?        
+  // set automatically when the status moves to PLAYING / COMPLETED
+  startedAt   DateTime?
+  completedAt DateTime?
+  // order of PLANNED games in the backlog queue (lower plays first)
+  backlogPosition Int?
+  listItems ShelfListItem[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   @@unique([userId, rawgId])
   @@unique([userId, slug])
   // userId-only lookups are covered by the unique indexes above (userId is their leading column)
   @@index([userId, status])
+  @@index([userId, completedAt])
   @@index([slug])
+}
+
+// User-made collections of shelf games, e.g. "Couch co-op"
+model ShelfList {
+  id          String          @id @default(cuid())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String
+  description String?
+  items       ShelfListItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  @@index([userId])
+}
+
+model ShelfListItem {
+  list    ShelfList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId  String
+  shelf   Shelf     @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  shelfId String
+  addedAt DateTime  @default(now())
+  @@id([listId, shelfId])
+  @@index([shelfId])
 }
 
 enum ShelfStatus {

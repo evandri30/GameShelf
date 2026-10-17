@@ -15,6 +15,8 @@ import StarRating from "@/components/ui/StarRating"
 
 type Props = {
     shelf: ShelfFDetailProps
+    // server-rendered "Add to list" menu
+    listsSlot?: React.ReactNode
 }
 
 type SaveState = "idle" | "saving" | "saved"
@@ -33,7 +35,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
     )
 }
 
-export default function ShelfDetail({ shelf }: Props) {
+export default function ShelfDetail({ shelf, listsSlot }: Props) {
     const [isPending, startTransition] = useTransition()
 
     // status & rating update instantly and roll back on failure
@@ -123,7 +125,14 @@ export default function ShelfDetail({ shelf }: Props) {
         if (notesTimer.current) clearTimeout(notesTimer.current)
     }, [])
 
-    const addedOn = new Date(shelf.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
+    const formatDate = (date: Date | null) =>
+        date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }) : null
+    // filled in automatically as the status changes
+    const timeline = [
+        { label: "Added", date: formatDate(shelf.createdAt) },
+        { label: "Started", date: formatDate(shelf.startedAt) },
+        { label: "Finished", date: formatDate(shelf.completedAt) },
+    ].filter((step) => step.date)
 
     return (
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
@@ -150,7 +159,13 @@ export default function ShelfDetail({ shelf }: Props) {
                 </div>
 
                 <div className="space-y-5">
-                    <p className="font-mono text-xs uppercase tracking-wider text-subtle">On your shelf since {addedOn}</p>
+                    <ol className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-wider text-subtle" aria-label="Timeline">
+                        {timeline.map((step) => (
+                            <li key={step.label}>
+                                {step.label} <span className="text-muted">{step.date}</span>
+                            </li>
+                        ))}
+                    </ol>
                     <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight md:text-5xl">{shelf.title}</h1>
 
                     <div className="space-y-2">
@@ -158,9 +173,12 @@ export default function ShelfDetail({ shelf }: Props) {
                         <StarRating value={optimistic.rating} onChange={handleRating} disabled={isPending} />
                     </div>
 
-                    <Link href={`/games/${shelf.slug}`} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-                        View game details <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-4">
+                        {listsSlot}
+                        <Link href={`/games/${shelf.slug}`} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                            View game details <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
+                    </div>
                 </div>
             </section>
 

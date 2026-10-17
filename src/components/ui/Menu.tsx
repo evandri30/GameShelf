@@ -1,18 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 type MenuProps = {
     label: string
     trigger: ReactNode
     triggerClassName?: string
+    triggerStyle?: CSSProperties
     align?: 'left' | 'right'
     // children get a close() so items can dismiss the menu after acting
     children: (close: () => void) => ReactNode
 }
 
 // Small dropdown: closes on outside click, Escape, or when an item calls close()
-export default function Menu({ label, trigger, triggerClassName = '', align = 'right', children }: MenuProps) {
+export default function Menu({ label, trigger, triggerClassName = '', triggerStyle, align = 'right', children }: MenuProps) {
     const [open, setOpen] = useState(false)
     const ref = useRef<HTMLDivElement>(null)
 
@@ -45,6 +46,7 @@ export default function Menu({ label, trigger, triggerClassName = '', align = 'r
                 aria-expanded={open}
                 onClick={() => setOpen((o) => !o)}
                 className={`cursor-pointer ${triggerClassName}`}
+                style={triggerStyle}
             >
                 {trigger}
             </button>

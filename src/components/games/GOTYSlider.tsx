@@ -108,7 +108,15 @@ export default function GOTYSlider({ games }: GOTYSliderProps) {
                             : "border-transparent opacity-50 hover:opacity-100"}`}
                     >
                         {g.background_image && (
-                            <Image src={getCroppedImageUrl(g.background_image, 420)} alt="" fill sizes="144px" loading="eager" className="object-cover" />
+                            <Image
+                                src={getCroppedImageUrl(g.background_image, 420)}
+                                alt=""
+                                fill
+                                sizes="144px"
+                                // only the thumbnails visible without scrolling the rail are loaded up front
+                                loading={index < 6 ? "eager" : "lazy"}
+                                className="object-cover"
+                            />
                         )}
                         <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-base/90 to-transparent px-2 pb-1 pt-4 text-left font-mono text-[11px] font-bold text-fg">
                             {g.awardYear}

@@ -2,15 +2,17 @@ import Image from 'next/image';
 import { Star } from 'lucide-react';
 import AddToShelfButton from './AddToShelfButton';
 import type { GameDetailProps } from "@/types"
+import type { ShelfStatus } from '@/generated/prisma/browser';
 import { getCroppedImageUrl } from '@/utils/image';
 import { Badge, MetacriticBadge } from '@/components/ui/Badge';
 
 type Props = {
     game: GameDetailProps;
     slug: string;
+    entry?: { status: ShelfStatus; slug: string };
 }
 
-export default function PageHeaderDetail({ game, slug }: Props) {
+export default function PageHeaderDetail({ game, slug, entry }: Props) {
     const year = game.released?.slice(0, 4)
     const studio = game.developers[0]?.name
 
@@ -58,6 +60,7 @@ export default function PageHeaderDetail({ game, slug }: Props) {
                     title={game.name}
                     slug={slug}
                     backgroundImage={game.background_image}
+                    entry={entry}
                 />
             </div>
         </section>

@@ -14,23 +14,25 @@ type Props = {
     title: string;
     slug: string;
     backgroundImage: string | null;
+    // set when the game is already on the user's shelf
+    entry?: { status: ShelfStatus; slug: string };
 }
 
 // Add with a chosen status straight from the game page; stays on the page afterwards
-export default function AddToShelfButton({ rawgId, title, slug, backgroundImage }: Props) {
+export default function AddToShelfButton({ rawgId, title, slug, backgroundImage, entry }: Props) {
     const [isPending, startTransition] = useTransition()
     const [status, setStatus] = useState<ShelfStatus>("PLANNED")
-    const [added, setAdded] = useState(false)
+    const [added, setAdded] = useState(entry ?? null)
 
     const addHandler = () => {
         startTransition(async () => {
             const result = await addToShelf({ rawgId, title, slug, backgroundImage, status })
 
             if (result.ok) {
-                setAdded(true)
+                setAdded({ status, slug })
                 toast.success(`Added to your shelf as ${STATUS_META[status].label}`)
             } else if (result.error === "Game already in shelf") {
-                setAdded(true)
+                setAdded({ status, slug })
                 toast.info("This game is already in your shelf")
             } else {
                 toast.error(result.error)
@@ -41,10 +43,13 @@ export default function AddToShelfButton({ rawgId, title, slug, backgroundImage 
     if (added) {
         return (
             <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex h-10 items-center gap-2 rounded-md border border-accent/50 bg-accent/10 px-4 text-sm font-medium text-accent">
-                    <Check className="h-4 w-4" /> In your shelf
+                <span
+                    className="inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold text-accent-fg"
+                    style={{ background: STATUS_META[added.status].color }}
+                >
+                    <Check className="h-4 w-4" /> In your shelf · {STATUS_META[added.status].label}
                 </span>
-                <Link href={`/shelf/${slug}`} className={buttonClass("secondary", "md")}>
+                <Link href={`/shelf/${added.slug}`} className={buttonClass("secondary", "md")}>
                     Open in shelf
                 </Link>
             </div>

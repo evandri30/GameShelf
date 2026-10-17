@@ -5,6 +5,8 @@ import ExpandableHtml from "./ExpandableHtml"
 
 type Props = {
     game: GameDetailProps
+    // streamed sidebar content (store links)
+    sidebarExtra?: React.ReactNode
 }
 
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -38,7 +40,7 @@ function ChipGroup({ title, items, variant = "outline" }: { title: string; items
     )
 }
 
-export default function PageContentDetail({ game }: Props) {
+export default function PageContentDetail({ game, sidebarExtra }: Props) {
     return (
         <section className="grid w-full grid-cols-1 gap-6 lg:grid-cols-3">
             {/* About */}
@@ -70,6 +72,7 @@ export default function PageContentDetail({ game }: Props) {
                     </dl>
                 </Card>
 
+                {sidebarExtra}
                 <ChipGroup title="Platforms" items={game.platforms.map(({ platform }) => platform)} />
                 <ChipGroup title="Genres" items={game.genres} />
                 <ChipGroup title="Tags" items={game.tags.slice(0, 12)} variant="solid" />

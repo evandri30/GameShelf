@@ -69,7 +69,14 @@ export const GameDetailSchema = z.object({
         name: z.string(),
         slug: z.string()
     })).nullable().transform(val => val ?? []),
-    website: z.url().nullable().catch(null)
+    website: z.url().nullable().catch(null),
+    stores: z.array(z.object({
+        store: z.object({
+            id: z.number(),
+            name: z.string(),
+            domain: z.string().nullable().catch(null)
+        })
+    })).nullable().transform(val => val ?? [])
 });
 
 export const GameResponseSchema = z.object({

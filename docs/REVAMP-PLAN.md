@@ -9,9 +9,9 @@ Dokumen ini berisi rencana rombak UI dan performance GameShelf, dari Fase 0 samp
 | 2 | Performance | ✅ Selesai |
 | 3 | Redesign per halaman | ✅ Selesai |
 | 4 | Bersih-bersih fitur gak relevan | ✅ Selesai |
-| 5 | Fitur baru (dipilih satu-satu) | ⏳ Belum |
+| 5 | Fitur baru | ✅ Item 1–7 selesai, item 8 (import Steam) belum |
 
-Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Fase 1–2 sudah di-commit (`f2f3ea6`), Fase 3 (`3afd92c`). Fase 4 **belum di-commit**.
+Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Commit: Fase 1–2 `f2f3ea6`, Fase 3 `3afd92c`, Fase 4 `3cee8d7`. Fase 5 **belum di-commit**.
 
 ---
 
@@ -313,16 +313,102 @@ Login/logout, quick-add, add dengan status, pindah status lewat menu (jumlah di 
 
 ---
 
-## Fase 5 — Ide Fitur Baru ⏳ (urut prioritas, pilih yang mau)
+## Fase 5 — Fitur Baru ✅ (item 1–7; item 8 belum)
 
-1. **Indikator "In shelf" + quick-add dengan status** di game card & detail. Ambil set `rawgId` milik user sekali. *Effort kecil, dampak besar*: sekarang user baru tahu game udah ada setelah kena error.
-2. **Filter Discover:** genre, platform, urutan (popular/rating/terbaru), dan tahun rilis. Semuanya didukung parameter API RAWG.
-3. **Profil publik `/u/[username]`** gantiin `/dashboard/share/[cuid]`. Isinya shelf + stats, dengan toggle privat/publik. Butuh kolom `username` + `isPublic`, plus **OG image dinamis** (`opengraph-image.tsx`) buat preview link di WA/Twitter.
-4. **Timeline & Year in Review:** kolom `startedAt`/`completedAt` otomatis terisi saat status berubah, lalu dipakai buat chart "completed per bulan".
-5. **Backlog queue:** urutan prioritas buat game PLANNED ("Up next"), dengan drag-to-reorder.
-6. **Detail game lebih kaya:** galeri screenshot, store links, dan "game dalam seri yang sama" (endpoint RAWG `/screenshots`, `/stores`, `/game-series`).
-7. **Custom lists / collections**, misalnya "Couch co-op" atau "Comfort games".
-8. *(Besar, nanti)* Import library dari Steam.
+### Database — migration `20261017030000_phase5_profiles_timeline_backlog_lists`
+
+| Perubahan | Keterangan |
+|---|---|
+| `User.username` (unique, wajib) | Dipakai di `/u/<username>`. **Backfill:** user lama dapat `<bagian depan email>-<5 karakter hash>`, contoh `evan-0d15b`. User baru dibuat otomatis dari nama/email lewat `generateUniqueUsername()` di `services/user.service.ts`. |
+| `User.isPublic` (default `false`) | Profil privat sampai pemiliknya nyalain sendiri. |
+| `Shelf.startedAt`, `Shelf.completedAt` | Terisi otomatis dari perubahan status. **Backfill:** game COMPLETED → `completedAt = updatedAt`; PLAYING/COMPLETED → `startedAt = createdAt` (perkiraan). |
+| `Shelf.backlogPosition` | Urutan game PLANNED. **Backfill:** urut dari yang paling lama ditambahkan. |
+| Tabel `ShelfList` + `ShelfListItem` | Custom list. Item merujuk ke game di shelf, jadi ikut terhapus kalau game-nya dihapus. |
+| Index `[userId, completedAt]` | Buat chart per bulan dan Year in Review. |
+
+**Aturan timeline** (`timelineFor()` di `shelf.service.ts`):
+
+| Status baru | `startedAt` | `completedAt` | `backlogPosition` |
+|---|---|---|---|
+| PLAYING | yang lama, kalau kosong sekarang | dikosongkan | dikosongkan |
+| COMPLETED | yang lama, kalau kosong sekarang | sekarang | dikosongkan |
+| PLANNED | tetap | dikosongkan | masuk paling belakang antrian |
+| DROPPED | tetap | dikosongkan | dikosongkan |
+
+### 1. Indikator "In shelf" + quick-add dengan status ✅
+- Tombol `+` di card Discover sekarang jadi **menu status** ("Add as Planned/Playing/…"). Kalau game udah di shelf, tombolnya berubah jadi chip berwarna status, dan menunya berisi "Move to …" + "Open in shelf".
+- Data diambil sekali per request lewat `getUserShelfIndex()` (map `rawgId` → entry).
+- Halaman detail game langsung nampilin **"In your shelf · <status>"** kalau udah ada, jadi gak perlu klik add lalu kena error duplikat.
+- `addToShelf` sekarang mengembalikan `id` entry baru, jadi status bisa langsung dipindah tanpa reload.
+
+### 2. Filter Discover ✅
+- Ada filter **genre, platform (keluarga: PC/PlayStation/Xbox/…), tahun rilis, dan urutan** (Popular / Top rated / Metacritic / Newest / Title A–Z).
+- `listGames()` di `lib/rawg.ts` gantiin `getGames` dan `searchGames`. Daftar genre dan platform diambil dari RAWG dan di-cache seminggu.
+- Semua URL Discover dibuat oleh satu helper, `discoverHref()` di `constants/discover.ts`. Search, filter, pagination, dan link back saling konsisten.
+- Link card bawa `?back=<URL listing>`, jadi tombol **"Back to results"** di detail balik ke search + filter + halaman yang sama. URL-nya divalidasi harus diawali `/games`.
+- Banner GOTY cuma muncul di Discover polos (tanpa search/filter, halaman 1).
+
+### 3. Profil publik `/u/[username]` ✅
+- **Kartu "Public profile" di halaman Stats** (gantiin tombol Share lama) berisi:
+  - switch publik/privat
+  - ganti username (validasi 3–20 karakter, error kalau udah dipakai)
+  - copy link dan tombol "View"
+- **Isi halaman profil:** avatar/nama, `@username`, "on GameShelf since …", stats lengkap (KPI, donut, top games), list, dan shelf per status. **Catatan pribadi (notes) gak pernah ikut diambil.**
+- **Profil privat:**
+  - Pengunjung lain dapat halaman not-found yang sama persis dengan username yang gak ada, jadi gak ketahuan akunnya ada.
+  - Pemilik tetap bisa buka, dengan banner "Only you can see this page".
+- **List publik** ada di `/u/<username>/lists/<id>`.
+- **Gambar OG dinamis** (`u/[username]/opengraph-image.tsx`) nampilin nama, @username, total game/completed/jam, dan 4 cover. Profil privat dapat gambar generik.
+- **Link lama `/dashboard/share/<id>`** di-redirect ke `/u/<username>` kalau profilnya publik, dan not-found kalau privat. Karena PPR, redirect-nya terjadi di client (status HTTP tetap 200).
+- Komponen `ShareButton` dihapus.
+
+### 4. Timeline & Year in Review ✅
+- **Shelf detail** nampilin timeline "Added · Started · Finished" yang terisi otomatis.
+- **Stats** dapat chart **"Finished, last 12 months"** (`CompletionChart`, bar CSS) dan tombol **"<tahun> in review"**.
+- **`/dashboard/review/[year]`** nampilin:
+  - KPI: jumlah tamat, jam di game yang ditamatin, rata-rata rating, jumlah game yang dimulai, jumlah game yang ditambahkan
+  - chart per bulan
+  - 3 game favorit tahun itu
+  - daftar semua game yang ditamatin beserta tanggalnya
+  - pindah tahun (cuma tahun yang ada datanya)
+
+### 5. Backlog queue ✅
+- **Strip "Up next"** di My Shelf nampilin 3 game teratas antrian + link "Reorder".
+- **`/shelf/backlog`**: daftar semua game PLANNED. Bisa **drag & drop** (desktop) atau **tombol ↑/↓** (mobile, keyboard). Urutan disimpan optimistic lewat action `reorderBacklog`, dan balik ke urutan lama kalau gagal.
+- Catatan: route statis `/shelf/backlog` dan `/shelf/lists` menang atas `/shelf/[slug]`, jadi game dengan slug "backlog" atau "lists" gak bisa dibuka di shelf. Kemungkinannya kecil.
+
+### 6. Detail game lebih kaya ✅
+- **Screenshots** pakai lightbox `<dialog>`: navigasi panah (tombol + keyboard), Esc atau klik backdrop buat nutup.
+- **Where to buy:** link store asli (Steam, GOG, PlayStation Store, …), gabungan nama store dari endpoint detail dan URL dari `/games/{id}/stores`.
+- **Also in the series:** rail game dalam seri yang sama.
+- Ketiganya **di-stream terpisah** (`<Suspense>` + skeleton) dan di-cache harian. Kalau request ke RAWG gagal, section-nya cuma disembunyiin, halaman gak ikut error.
+
+### 7. Custom lists ✅
+- **`/shelf/lists`**: form bikin list (nama + deskripsi), dan grid list dengan mosaic 4 cover terbaru.
+- **`/shelf/lists/[listId]`**: edit nama/deskripsi, hapus game dari list (optimistic), dan hapus list (pakai `ConfirmDialog`; game tetap di shelf).
+- **Shelf detail** dapat tombol **"Add to list"**: checklist semua list, bisa centang beberapa sekaligus, plus shortcut "New list".
+- List ikut tampil di profil publik.
+
+### Detail lain
+- Font Chakra Petch weight 500 dibuang karena gak pernah dipakai (satu file font lebih sedikit). Heading di deskripsi game dikasih `font-semibold`.
+- Thumbnail rail GOTY: cuma 6 pertama yang `eager`, sisanya lazy (sebelumnya muncul warning preload-unused).
+- Server action baru ada di `app/shelf/actions.ts` (`reorderBacklog`, `createList`, `updateList`, `deleteList`, `toggleListItem`) dan `app/dashboard/actions.ts` (`updateProfile`).
+- Service baru: `services/user.service.ts` dan `services/list.service.ts`.
+
+### Diverifikasi di production build (browser + curl)
+- **Discover:** quick-add dengan 3 status berbeda, chip status tetap ada setelah reload, filter genre + tahun, link pagination dan back yang bawa filter.
+- **Detail game:** lightbox screenshot (termasuk navigasi keyboard), 5 link store, rail seri game.
+- **Shelf:** reorder backlog yang tersimpan setelah reload, timeline otomatis di game COMPLETED, Add to list.
+- **List:** bikin list, hapus game dari list, hapus list.
+- **Stats & Year in Review:** chart per bulan, halaman 2026 in review.
+- **Profil:**
+  - Profil privat → pengunjung anonim dapat not-found, tanpa nama/game bocor di HTML, dan gambar OG generik.
+  - Setelah ganti username + publik → profil, list, gambar OG, dan redirect link lama jalan.
+- **Mobile 390px:** filter ke-wrap rapi, gak ada scroll horizontal.
+
+**Belum dites lewat browser:** ganti nama/deskripsi list (cuma lolos typecheck), dan drag & drop pakai mouse (yang dites tombol ↑/↓; urutan dan simpannya lewat fungsi yang sama).
+
+8. *(Besar, nanti)* Import library dari Steam: **belum dikerjakan**.
 
 ---
 

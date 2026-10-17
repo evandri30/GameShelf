@@ -3,6 +3,8 @@ import { getUserBySlug } from '@/services/shelf.service'
 import { notFound, redirect } from 'next/navigation'
 import ShelfDetail from '@/components/shelf/ShelfDetail'
 import Backdrop from '@/components/Backdrop'
+import AddToListMenu from '@/components/lists/AddToListMenu'
+import { getListMembership } from '@/services/list.service'
 import type { Metadata } from 'next'
 
 type Props = {
@@ -53,10 +55,12 @@ export default async function ShelfDetailPage({ params }: Props) {
         notFound()
     }
 
+    const lists = await getListMembership(session.user.id, shelf.id)
+
     return (
         <div className="relative isolate -mt-16 animate-fade-up pt-16">
             <Backdrop src={shelf.backgroundImage} />
-            <ShelfDetail shelf={shelf} />
+            <ShelfDetail shelf={shelf} listsSlot={<AddToListMenu shelfId={shelf.id} lists={lists} />} />
         </div>
     )
 }

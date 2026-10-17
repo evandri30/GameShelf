@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ShelfStatus } from '@/generated/prisma/browser'
+import type { ShelfStatus } from '@/generated/prisma/browser'
 import { cache } from 'react'
 
 export async function getUserShelf(userId: string) {
@@ -20,6 +20,17 @@ export async function getUserShelf(userId: string) {
     })
 }
 
+export type ShelfIndex = Record<number, { id: string; status: ShelfStatus; slug: string }>
+
+// rawgId -> shelf entry, so Discover can show which games are already on the shelf
+export const getUserShelfIndex = cache(async (userId: string): Promise<ShelfIndex> => {
+    const rows = await prisma.shelf.findMany({
+        where: { userId },
+        select: { id: true, rawgId: true, status: true, slug: true }
+    })
+    return Object.fromEntries(rows.map(({ rawgId, ...rest }) => [rawgId, rest]))
+})
+
 export const getUserBySlug = cache(async (userId: string, slug: string) => {
     return await prisma.shelf.findUnique({
         where: {
@@ -31,7 +42,49 @@ export const getUserBySlug = cache(async (userId: string, slug: string) => {
     })
 })
 
-export async function createUserShelf(userId: string, rawgId: number, title: string, slug: string, backgroundImage: string | null, status?: ShelfStatus) {
+async function nextBacklogPosition(userId: string) {
+    const { _max } = await prisma.shelf.aggregate({
+        where: { userId, status: 'PLANNED' },
+        _max: { backlogPosition: true }
+    })
+    return (_max.backlogPosition ?? 0) + 1
+}
+
+type Timeline = {
+    startedAt?: Date | null
+    completedAt?: Date | null
+    backlogPosition?: number | null
+}
+
+// Dates and backlog order follow the status, so the user never has to fill them in
+async function timelineFor(
+    userId: string,
+    next: ShelfStatus,
+    current?: { status: ShelfStatus; startedAt: Date | null; completedAt: Date | null }
+): Promise<Timeline> {
+    if (current?.status === next) return {}
+
+    const now = new Date()
+    const timeline: Timeline = {
+        // only PLANNED games live in the backlog queue
+        backlogPosition: next === 'PLANNED' ? await nextBacklogPosition(userId) : null,
+    }
+
+    if (next === 'PLAYING') {
+        timeline.startedAt = current?.startedAt ?? now
+        timeline.completedAt = null
+    } else if (next === 'COMPLETED') {
+        timeline.startedAt = current?.startedAt ?? now
+        timeline.completedAt = now
+    } else {
+        // PLANNED or DROPPED: not finished (any more)
+        timeline.completedAt = null
+    }
+
+    return timeline
+}
+
+export async function createUserShelf(userId: string, rawgId: number, title: string, slug: string, backgroundImage: string | null, status: ShelfStatus = 'PLANNED') {
     return await prisma.shelf.create({
         data: {
             userId,
@@ -39,15 +92,26 @@ export async function createUserShelf(userId: string, rawgId: number, title: str
             title,
             slug,
             backgroundImage,
-            status
+            status,
+            ...(await timelineFor(userId, status))
         }
     })
 }
 
 export async function editUserShelf(id: string, userId: string, update: { status?: ShelfStatus, rating?: number | null, caption?: string | null, playtime?: number | null }) {
+    let timeline: Timeline = {}
+
+    if (update.status) {
+        const current = await prisma.shelf.findUniqueOrThrow({
+            where: { id, userId },
+            select: { status: true, startedAt: true, completedAt: true }
+        })
+        timeline = await timelineFor(userId, update.status, current)
+    }
+
     return await prisma.shelf.update({
         where: { id, userId },
-        data: update
+        data: { ...update, ...timeline }
     })
 }
 
@@ -57,11 +121,98 @@ export async function deleteUserShelf(id: string, userId: string) {
     })
 }
 
+// ---- Backlog ----
+
+export async function getBacklog(userId: string) {
+    return await prisma.shelf.findMany({
+        where: { userId, status: 'PLANNED' },
+        orderBy: [{ backlogPosition: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+        select: { id: true, title: true, slug: true, backgroundImage: true, createdAt: true }
+    })
+}
+
+// ids is the full new order of the user's planned games
+export async function reorderUserBacklog(userId: string, ids: string[]) {
+    await prisma.$transaction(
+        ids.map((id, index) =>
+            prisma.shelf.updateMany({
+                where: { id, userId, status: 'PLANNED' },
+                data: { backlogPosition: index + 1 }
+            })
+        )
+    )
+}
+
+// ---- Timeline & Year in Review ----
+
+// Completed games per month for the last `months` months (oldest first), for the Stats chart
+export async function getCompletionsByMonth(userId: string, months = 12) {
+    const now = new Date()
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
+    const rows = await prisma.shelf.findMany({
+        where: { userId, status: 'COMPLETED', completedAt: { gte: start } },
+        select: { completedAt: true }
+    })
+
+    const buckets = Array.from({ length: months }, (_, i) => {
+        const d = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1))
+        return { month: d.getUTCMonth(), year: d.getUTCFullYear(), count: 0 }
+    })
+    for (const { completedAt } of rows) {
+        const bucket = buckets.find((b) => b.year === completedAt!.getUTCFullYear() && b.month === completedAt!.getUTCMonth())
+        if (bucket) bucket.count++
+    }
+    return buckets
+}
+
+// Years that have at least one completed game, newest first (for the Year in Review switcher)
+export async function getReviewYears(userId: string) {
+    const rows = await prisma.shelf.findMany({
+        where: { userId, status: 'COMPLETED', completedAt: { not: null } },
+        select: { completedAt: true }
+    })
+    return [...new Set(rows.map((r) => r.completedAt!.getUTCFullYear()))].sort((a, b) => b - a)
+}
+
+export async function getYearInReview(userId: string, year: number) {
+    const from = new Date(Date.UTC(year, 0, 1))
+    const to = new Date(Date.UTC(year + 1, 0, 1))
+
+    const [completed, started, added] = await Promise.all([
+        prisma.shelf.findMany({
+            where: { userId, status: 'COMPLETED', completedAt: { gte: from, lt: to } },
+            orderBy: { completedAt: 'asc' },
+            select: { id: true, title: true, slug: true, backgroundImage: true, rating: true, playtime: true, completedAt: true }
+        }),
+        prisma.shelf.count({ where: { userId, startedAt: { gte: from, lt: to } } }),
+        prisma.shelf.count({ where: { userId, createdAt: { gte: from, lt: to } } }),
+    ])
+
+    const months = Array.from({ length: 12 }, (_, month) => ({
+        month,
+        count: completed.filter((g) => g.completedAt!.getUTCMonth() === month).length,
+    }))
+    const rated = completed.filter((g) => g.rating)
+
+    return {
+        year,
+        completed,
+        started,
+        added,
+        hours: completed.reduce((acc, g) => acc + (g.playtime ?? 0), 0),
+        averageRating: rated.length ? rated.reduce((acc, g) => acc + g.rating!, 0) / rated.length : null,
+        favorites: [...rated].sort((a, b) => b.rating! - a.rating! || (b.playtime ?? 0) - (a.playtime ?? 0)).slice(0, 3),
+        months,
+    }
+}
+
+// ---- Dashboard ----
+
 // cache(): generateMetadata and the page both ask for the same data in one request
 export const getDashboardData = cache(async (userId: string) => {
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { name: true, image: true, id: true }
+        select: { name: true, image: true, id: true, username: true, isPublic: true }
     })
 
     if (!user) return null

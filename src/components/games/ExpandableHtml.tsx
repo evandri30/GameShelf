@@ -19,7 +19,7 @@ export default function ExpandableHtml({ html, collapsedHeight = 260 }: { html: 
         <div>
             <div
                 ref={ref}
-                className="relative overflow-hidden leading-relaxed text-fg/80 [&_a]:text-accent [&_a]:underline [&_h3]:mt-4 [&_h3]:font-display [&_h3]:text-lg [&_h3]:text-fg [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3"
+                className="relative overflow-hidden leading-relaxed text-fg/80 [&_a]:text-accent [&_a]:underline [&_h3]:mt-4 [&_h3]:font-display [&_h3]:font-semibold [&_h3]:text-lg [&_h3]:text-fg [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3"
                 style={clamped ? { maxHeight: collapsedHeight } : undefined}
             >
                 <div dangerouslySetInnerHTML={{ __html: html }} />

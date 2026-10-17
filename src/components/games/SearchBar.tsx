@@ -3,13 +3,16 @@
 import { Search, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
+import { discoverHref, type DiscoverQuery } from '@/constants/discover'
 
 type SearchBarProps = {
     searchQuery: string;
     totalGames: number;
+    // current filters, kept when the search text changes
+    query: DiscoverQuery;
 }
 
-export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
+export default function SearchBar({ searchQuery, totalGames, query }: SearchBarProps) {
     const router = useRouter()
 
     const [inputValue, setInputValue] = useState(searchQuery || '')
@@ -26,8 +29,8 @@ export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
 
     const updateSearch = (value: string) => {
         lastPushedQuery.current = value
-        // A new search always starts from page 1, so the only param kept is the query itself
-        router.push(value ? `/games?${new URLSearchParams({ search: value })}` : '/games')
+        // A new search keeps the filters but always starts from page 1
+        router.push(discoverHref({ ...query, search: value || undefined, page: 1 }))
     }
 
     const handleSearchChange = (value: string) => {

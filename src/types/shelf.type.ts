@@ -15,6 +15,8 @@ export type ShelfProps = {
 
 export type ShelfFDetailProps = ShelfProps & {
     rawgId: number;
+    startedAt: Date | null;
+    completedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }
