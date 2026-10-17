@@ -31,10 +31,10 @@ export async function addToShelf(input: CreateShelfInput): Promise<ActionResult>
     const result = CreateShelfSchema.safeParse(input)
     if (!result.success) return { ok: false, error: 'Invalid input' }
 
-    const { rawgId, title, slug, backgroundImage } = result.data
+    const { rawgId, title, slug, backgroundImage, status } = result.data
 
     try {
-        await createUserShelf(userId, rawgId, title, slug, backgroundImage)
+        await createUserShelf(userId, rawgId, title, slug, backgroundImage, status)
     } catch (error) {
         if (isPrismaError(error, 'P2002')) return { ok: false, error: 'Game already in shelf' }
         console.error(error)

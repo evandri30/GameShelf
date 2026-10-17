@@ -1,11 +1,13 @@
 "use client"
 
-import { useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Plus, Loader2 } from 'lucide-react'
+import { useState, useTransition } from "react"
+import Link from "next/link"
+import { Check, Loader2, Plus } from 'lucide-react'
 import { toast } from "react-toastify"
+import type { ShelfStatus } from "@/generated/prisma/browser"
+import { SHELF_STATUSES, STATUS_META, isShelfStatus } from "@/constants/status"
 import { addToShelf } from "@/app/shelf/actions"
-import Button from "@/components/ui/Button"
+import Button, { buttonClass } from "@/components/ui/Button"
 
 type Props = {
     rawgId: number;
@@ -14,28 +16,59 @@ type Props = {
     backgroundImage: string | null;
 }
 
+// Add with a chosen status straight from the game page; stays on the page afterwards
 export default function AddToShelfButton({ rawgId, title, slug, backgroundImage }: Props) {
     const [isPending, startTransition] = useTransition()
-    const router = useRouter()
+    const [status, setStatus] = useState<ShelfStatus>("PLANNED")
+    const [added, setAdded] = useState(false)
 
     const addHandler = () => {
         startTransition(async () => {
-            const result = await addToShelf({ rawgId, title, slug, backgroundImage })
+            const result = await addToShelf({ rawgId, title, slug, backgroundImage, status })
 
-            if (!result.ok) {
+            if (result.ok) {
+                setAdded(true)
+                toast.success(`Added to your shelf as ${STATUS_META[status].label}`)
+            } else if (result.error === "Game already in shelf") {
+                setAdded(true)
+                toast.info("This game is already in your shelf")
+            } else {
                 toast.error(result.error)
-                return
             }
-
-            toast.success("Game added to shelf successfully")
-            router.push("/shelf")
         })
     }
 
+    if (added) {
+        return (
+            <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex h-10 items-center gap-2 rounded-md border border-accent/50 bg-accent/10 px-4 text-sm font-medium text-accent">
+                    <Check className="h-4 w-4" /> In your shelf
+                </span>
+                <Link href={`/shelf/${slug}`} className={buttonClass("secondary", "md")}>
+                    Open in shelf
+                </Link>
+            </div>
+        )
+    }
+
     return (
-        <Button onClick={addHandler} disabled={isPending} size="sm">
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {isPending ? "Adding..." : "Add to shelf"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="add-status" className="sr-only">Status</label>
+            <select
+                id="add-status"
+                value={status}
+                onChange={(e) => isShelfStatus(e.target.value) && setStatus(e.target.value)}
+                disabled={isPending}
+                className="h-10 cursor-pointer rounded-md border border-line-strong bg-surface-2 px-3 text-sm text-fg focus:border-accent focus:outline-none"
+            >
+                {SHELF_STATUSES.map((s) => (
+                    <option key={s} value={s}>{STATUS_META[s].label}</option>
+                ))}
+            </select>
+            <Button onClick={addHandler} disabled={isPending}>
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {isPending ? "Adding..." : "Add to shelf"}
+            </Button>
+        </div>
     )
 }

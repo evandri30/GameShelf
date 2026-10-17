@@ -15,23 +15,23 @@ export default async function DashboardPage() {
 
     if (!data) {
         return (
-            <div className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
+            <div className="flex min-h-[60vh] items-center justify-center px-6 text-center">
                 <p className="text-muted">Failed to load dashboard data.</p>
             </div>
         )
     }
 
     return (
-        <div className="relative flex min-h-screen animate-fade-up flex-col items-center px-6 py-16">
-            <div className="mx-auto mb-16 flex w-full max-w-5xl flex-col items-start justify-between gap-6 md:flex-row md:items-end">
-                <div className="space-y-2 text-left lg:space-y-4">
-                    <h1 className="font-display text-4xl font-bold uppercase tracking-wide text-fg md:text-5xl lg:text-6xl">Your Dashboard</h1>
-                    <p className="text-lg font-medium text-muted">Overview of your gaming journey</p>
+        <div className="mx-auto flex max-w-6xl animate-fade-up flex-col gap-10 px-6 py-12">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+                <div className="space-y-2">
+                    <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">Your Stats</h1>
+                    <p className="text-muted">Your gaming journey, by the numbers.</p>
                 </div>
                 <ShareButton userId={session.user.id} />
             </div>
 
-            <DashboardStats stats={data.stats} totalGames={data.totalGames} topGames={data.topGames} />
+            <DashboardStats data={data} />
         </div>
     )
 }

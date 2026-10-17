@@ -4,38 +4,31 @@ import { useOptimistic, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { toast } from "react-toastify"
-import { Trash2 } from "lucide-react"
+import { Check, Clock, MoreVertical, Star, Trash2 } from "lucide-react"
 import type { ShelfStatus } from "@/generated/prisma/browser"
-import { SHELF_STATUSES, STATUS_META, isShelfStatus } from "@/constants/status"
+import type { ShelfProps } from "@/types"
+import { SHELF_STATUSES, STATUS_META } from "@/constants/status"
 import { getCroppedImageUrl } from "@/utils/image"
 import { removeFromShelf, updateShelf } from "@/app/shelf/actions"
 import { StatusBadge } from "@/components/ui/Badge"
-import Button from "@/components/ui/Button"
 import ConfirmDialog from "@/components/ui/ConfirmDialog"
+import Menu, { MenuDivider, MenuLabel, menuItemClass } from "@/components/ui/Menu"
 
-type Props = {
-    id: string;
-    title: string;
-    slug: string;
-    status: ShelfStatus;
-    backgroundImage: string | null
-}
-
-export default function ShelfCard({ id, title, slug, status, backgroundImage }: Props) {
+export default function ShelfCard({ id, title, slug, status, backgroundImage, rating, playtime, eager = false }: ShelfProps & { eager?: boolean }) {
     const [isPending, startTransition] = useTransition()
     // Optimistic values show the change instantly and fall back to the server value if the action fails
     const [optimisticStatus, setOptimisticStatus] = useOptimistic(status)
     const [removed, setRemoved] = useOptimistic(false)
     const [confirmOpen, setConfirmOpen] = useState(false)
 
-    const handleChange = (value: string) => {
-        if (!isShelfStatus(value)) return
+    const handleChange = (value: ShelfStatus) => {
+        if (value === optimisticStatus) return
 
         startTransition(async () => {
             setOptimisticStatus(value)
             const result = await updateShelf(id, { status: value })
 
-            if (result.ok) toast.success("Status updated")
+            if (result.ok) toast.success(`Moved to ${STATUS_META[value].label}`)
             else toast.error(result.error)
         })
     }
@@ -55,68 +48,100 @@ export default function ShelfCard({ id, title, slug, status, backgroundImage }: 
     if (removed) return null
 
     return (
-        <div className="group overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-line-strong">
-            {/* Image */}
-            <Link href={`/shelf/${slug}`} className="relative block h-48 w-full overflow-hidden">
+        <article className="group relative rounded-lg border border-line bg-surface text-left transition-[border-color,box-shadow] hover:border-accent/50 hover:shadow-glow">
+            <div className="relative aspect-video overflow-hidden rounded-t-lg">
                 {backgroundImage ? (
                     <Image
                         src={getCroppedImageUrl(backgroundImage)}
-                        alt={title}
+                        alt=""
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        loading={eager ? "eager" : "lazy"}
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">
-                        No Image
-                    </div>
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">No Image</div>
                 )}
+                <div className="absolute inset-0 bg-linear-to-t from-surface via-transparent to-transparent" />
                 <StatusBadge status={optimisticStatus} className="absolute left-3 top-3 bg-base/80" />
-            </Link>
+            </div>
 
-            {/* Content */}
-            <div className="space-y-3 p-4 text-left">
-                <Link href={`/shelf/${slug}`}>
-                    <h2 className="line-clamp-2 min-h-12 font-semibold text-fg transition-colors hover:text-accent">
+            <div className="space-y-2 p-4">
+                <h2 className="line-clamp-1 font-semibold text-fg transition-colors group-hover:text-accent">
+                    <Link href={`/shelf/${slug}`} className="after:absolute after:inset-0 focus-visible:outline-none">
                         {title}
-                    </h2>
-                </Link>
-
-                <div className="flex gap-2">
-                    <select
-                        aria-label={`Status for ${title}`}
-                        className="h-9 min-w-0 flex-1 cursor-pointer rounded-md border border-line-strong bg-surface-2 px-2 text-sm text-fg transition-colors focus:border-accent focus:outline-none"
-                        value={optimisticStatus}
-                        disabled={isPending}
-                        onChange={(e) => handleChange(e.target.value)}
-                    >
-                        {SHELF_STATUSES.map((s) => (
-                            <option key={s} value={s}>
-                                {STATUS_META[s].label}
-                            </option>
-                        ))}
-                    </select>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        className="h-9 w-9 px-0"
-                        onClick={() => setConfirmOpen(true)}
-                        disabled={isPending}
-                        aria-label={`Remove ${title} from shelf`}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </Link>
+                </h2>
+                <div className="flex items-center gap-4 font-mono text-xs text-muted">
+                    <span className="flex items-center gap-1">
+                        <Star className={`h-3.5 w-3.5 ${rating ? "fill-accent text-accent" : "text-subtle"}`} aria-hidden />
+                        {rating ? `${rating}/5` : "Unrated"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" aria-hidden /> {playtime ?? 0}h
+                    </span>
                 </div>
             </div>
 
-            <ConfirmDialog
-                open={confirmOpen}
-                title="Remove this game from your shelf?"
-                description={`${title} and your notes, rating and play hours for it will be deleted.`}
-                confirmLabel="Yes, remove"
-                onConfirm={handleDelete}
-                onCancel={() => setConfirmOpen(false)}
-            />
-        </div>
+            {/* Actions sit above the stretched link */}
+            <div className="absolute right-3 top-3 z-10 focus-within:z-30">
+                <Menu
+                    label={`Actions for ${title}`}
+                    triggerClassName="flex h-8 w-8 items-center justify-center rounded-full border border-line-strong bg-base/80 text-fg backdrop-blur-md transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                    trigger={<MoreVertical className="h-4 w-4" />}
+                >
+                    {(close) => (
+                        <>
+                            <MenuLabel>Move to</MenuLabel>
+                            {SHELF_STATUSES.map((s) => (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    role="menuitemradio"
+                                    aria-checked={s === optimisticStatus}
+                                    disabled={isPending}
+                                    className={menuItemClass}
+                                    onClick={() => {
+                                        close()
+                                        handleChange(s)
+                                    }}
+                                >
+                                    <span className="h-2 w-2 rounded-full" style={{ background: STATUS_META[s].color }} />
+                                    {STATUS_META[s].label}
+                                    {s === optimisticStatus && <Check className="ml-auto h-4 w-4 text-accent" />}
+                                </button>
+                            ))}
+                            <MenuDivider />
+                            <button
+                                type="button"
+                                role="menuitem"
+                                disabled={isPending}
+                                className={`${menuItemClass} text-status-dropped`}
+                                onClick={() => {
+                                    close()
+                                    setConfirmOpen(true)
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" /> Remove from shelf
+                            </button>
+                        </>
+                    )}
+                </Menu>
+            </div>
+
+            {confirmOpen && (
+                <ConfirmDialog
+                    open
+                    title="Remove this game from your shelf?"
+                    description={`${title} and your notes, rating and play hours for it will be deleted.`}
+                    confirmLabel="Yes, remove"
+                    onConfirm={handleDelete}
+                    onCancel={() => setConfirmOpen(false)}
+                />
+            )}
+
+            {/* keyboard focus ring for the stretched link */}
+            <div className="pointer-events-none absolute inset-0 rounded-lg ring-accent group-has-[a:focus-visible]:ring-2" />
+        </article>
     )
 }

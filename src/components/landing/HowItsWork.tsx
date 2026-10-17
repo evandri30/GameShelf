@@ -2,20 +2,10 @@ import type { HowItsWorkProps } from "@/types"
 
 export default function HowItsWork({ no, title, description }: HowItsWorkProps) {
     return (
-        <div
-            className="group rounded-xl border border-line bg-surface p-6
-                 flex flex-col items-center text-center gap-4
-                 transition-all duration-300 hover:bg-surface-2 hover:-translate-y-1.5 hover:scale-[1.02] mt-12"
-        >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full
-                 border border-line-strong text-sm font-semibold">
-                <span className="text-xs uppercase tracking-wider text-subtle">
-                    {no}
-                </span>
-            </div>
-
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="text-sm text-muted">{description}</p>
-        </div>
+        <li className="relative rounded-lg border border-line bg-surface p-6 text-left">
+            <span className="font-mono text-4xl font-bold text-accent/30">0{no}</span>
+            <h3 className="mt-3 font-display text-lg font-semibold uppercase tracking-wide">{title}</h3>
+            <p className="mt-2 text-sm text-muted">{description}</p>
+        </li>
     )
 }

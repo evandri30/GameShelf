@@ -2,18 +2,12 @@ import type { FeatureCardProps } from '@/types'
 
 export default function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
     return (
-        <div
-            className="group rounded-xl border border-line bg-surface p-6
-                 flex flex-col items-center text-center gap-4
-                 transition-all duration-300 hover:bg-surface-2 hover:-translate-y-1.5"
-        >
-            <div className="w-14 h-14 flex items-center justify-center rounded-lg
-                       bg-surface-2 group-hover:bg-line-strong transition">
-                <Icon className="w-7 h-7 text-fg" />
+        <div className="group rounded-lg border border-line bg-surface p-6 text-left transition-[border-color,box-shadow] hover:border-accent/50 hover:shadow-glow">
+            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-md bg-accent/10 text-accent">
+                <Icon className="h-5 w-5" />
             </div>
-
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="text-sm text-muted">{description}</p>
+            <h3 className="font-display text-lg font-semibold uppercase tracking-wide">{title}</h3>
+            <p className="mt-2 text-sm text-muted">{description}</p>
         </div>
     );
 }

@@ -25,6 +25,7 @@
 
   --animate-fade-up: fade-up 0.35s ease-out both;
   --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-progress: progress 6s linear forwards;
 
   @keyframes fade-up {
     from {
@@ -34,6 +35,15 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
     }
   }
 

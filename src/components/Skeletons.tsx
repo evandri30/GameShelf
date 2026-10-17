@@ -1,31 +1,26 @@
 import { Skeleton } from "@/components/ui/Card"
 
-export function PageHeaderSkeleton() {
+export function CardGridSkeleton({ count = 6, columns = "sm:grid-cols-2 lg:grid-cols-3" }: { count?: number; columns?: string }) {
     return (
-        <div className="flex flex-col items-center gap-4">
-            <Skeleton className="h-12 w-56" />
-            <Skeleton className="h-5 w-80 max-w-full" />
-        </div>
-    )
-}
-
-export function CardGridSkeleton({ count = 8, imageClass = "h-40" }: { count?: number; imageClass?: string }) {
-    return (
-        <div className="grid w-full max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className={`grid w-full grid-cols-1 gap-5 ${columns}`}>
             {Array.from({ length: count }, (_, i) => (
-                <div key={i} className="overflow-hidden rounded-lg border border-line bg-surface">
-                    <Skeleton className={`${imageClass} rounded-none`} />
-                    <div className="space-y-3 p-4">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                        <Skeleton className="h-3 w-1/3" />
-                    </div>
-                </div>
+                <Skeleton key={i} className="aspect-video rounded-lg" />
             ))}
         </div>
     )
 }
 
-export function HeroSkeleton({ className = "h-100" }: { className?: string }) {
-    return <Skeleton className={`w-full rounded-lg ${className}`} />
+// key art + title block, shared by the game and shelf detail pages
+export function DetailHeaderSkeleton() {
+    return (
+        <div className="grid items-end gap-8 md:grid-cols-[1.3fr_1fr]">
+            <Skeleton className="aspect-video rounded-lg" />
+            <div className="space-y-4">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-10 w-56" />
+            </div>
+        </div>
+    )
 }

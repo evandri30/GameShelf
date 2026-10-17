@@ -1,14 +1,16 @@
-import { CardGridSkeleton, PageHeaderSkeleton } from "@/components/Skeletons"
+import { CardGridSkeleton } from "@/components/Skeletons"
 import { Skeleton } from "@/components/ui/Card"
 
 export default function Loading() {
     return (
-        <div className="flex flex-col items-center gap-12 px-6 py-16">
-            <PageHeaderSkeleton />
-            <div className="flex flex-wrap justify-center gap-3">
-                {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-9 w-24" />)}
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-12">
+            <div className="space-y-3">
+                <Skeleton className="h-12 w-60" />
+                <Skeleton className="h-5 w-80 max-w-full" />
             </div>
-            <CardGridSkeleton imageClass="h-48" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <CardGridSkeleton count={8} columns="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" />
         </div>
     )
 }

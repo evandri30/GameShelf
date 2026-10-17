@@ -1,25 +1,33 @@
 import GameCard from "./GameCard";
 import type { GameProps } from "@/types";
-import { Book } from 'lucide-react'
+import { Compass, SearchX } from 'lucide-react'
 import { SectionHeading } from '@/components/ui/Card'
 
 type GameGrindProps = {
     games: GameProps[];
     searchQuery?: string;
     currentPage: number;
+    aboveFold?: boolean;
 }
 
-export default function GameGrind({ games, searchQuery, currentPage }: GameGrindProps) {
+export default function GameGrind({ games, searchQuery, currentPage, aboveFold = false }: GameGrindProps) {
     return (
-        <div className="mt-16 flex w-full max-w-7xl flex-col gap-4">
-            <div className="mb-6">
-                <SectionHeading title={searchQuery ? "Search results" : "Discover games"} icon={Book} />
-            </div>
-            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl w-full">
-                {games.map((game) => (
-                    <GameCard key={game.id} searchQuery={searchQuery} currentPage={currentPage} game={game} />
-                ))}
-            </section>
-        </div>
+        <section className="w-full space-y-6">
+            <SectionHeading title={searchQuery ? `Results for "${searchQuery}"` : "Popular right now"} icon={Compass} />
+
+            {games.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-line-strong py-16 text-center text-muted">
+                    <SearchX className="h-10 w-10 text-subtle" />
+                    <p>No games found. Try a different title.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {games.map((game, i) => (
+                        // without the GOTY banner (search, later pages) the first row is above the fold
+                        <GameCard key={game.id} searchQuery={searchQuery} currentPage={currentPage} game={game} eager={aboveFold && i < 3} />
+                    ))}
+                </div>
+            )}
+        </section>
     )
 }

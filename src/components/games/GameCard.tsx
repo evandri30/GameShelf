@@ -3,79 +3,81 @@ import Image from "next/image";
 import { Star } from "lucide-react"
 import type { GameProps } from "@/types"
 import { getCroppedImageUrl } from "@/utils/image"
-import { Badge, MetacriticBadge } from "@/components/ui/Badge"
+import { MetacriticBadge } from "@/components/ui/Badge"
+import QuickAddButton from "./QuickAddButton"
 
 type GameCardProps = {
     game: GameProps
     searchQuery?: string;
     currentPage: number
+    eager?: boolean
 }
 
-export default function GameCard({ game, searchQuery, currentPage }: GameCardProps) {
+export function gameHref(slug: string, searchQuery?: string, currentPage?: number) {
+    if (!searchQuery) return `/games/${slug}`
+    return `/games/${slug}?${new URLSearchParams({ from: "search", q: searchQuery, page: String(currentPage ?? 1) })}`
+}
+
+// Cover art first: title over the image, details slide in on hover.
+// The link is stretched over the card so the quick-add button can sit on top without nesting interactive elements.
+export default function GameCard({ game, searchQuery, currentPage, eager = false }: GameCardProps) {
     return (
-        <Link
-            href={`/games/${game.slug}${searchQuery ? `?from=search&q=${searchQuery}&page=${currentPage}` : ``}`}
-            key={game.id}
-            className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] hover:border-accent/60 hover:shadow-glow"
-        >
-            {/* Thumbnail */}
-            <div className="relative h-40 w-full overflow-hidden">
-                {game.background_image ? (
-                    <Image
-                        src={getCroppedImageUrl(game.background_image)}
-                        alt={game.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-sm text-subtle">
-                        No Image
-                    </div>
-                )}
+        <article className="group relative aspect-video overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] hover:border-accent/60 hover:shadow-glow">
+            {game.background_image ? (
+                <Image
+                    src={getCroppedImageUrl(game.background_image)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    loading={eager ? "eager" : "lazy"}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+            ) : (
+                <div className="flex h-full w-full items-center justify-center bg-surface-2 text-sm text-subtle">No Image</div>
+            )}
 
-                {game.metacritic && <MetacriticBadge score={game.metacritic} className="absolute right-2 top-2" />}
+            <div className="absolute inset-0 bg-linear-to-t from-base via-base/40 to-transparent" />
 
-                {game.esrb_rating && <Badge className="absolute bottom-2 left-2 border-line-strong bg-base/80 text-muted">{game.esrb_rating.name}</Badge>}
+            {/* Top row */}
+            <div className="absolute inset-x-3 top-3 z-20 flex items-start justify-between">
+                {game.metacritic ? <MetacriticBadge score={game.metacritic} /> : <span />}
+                <div className="opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+                    <QuickAddButton rawgId={game.id} title={game.name} slug={game.slug} backgroundImage={game.background_image} />
+                </div>
             </div>
 
-            {/* Info */}
-            <div className="flex flex-1 flex-col gap-2 p-4">
-                <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-fg transition-colors group-hover:text-accent">
-                    {game.name}
+            {/* Bottom: title always visible, meta revealed on hover */}
+            <div className="absolute inset-x-0 bottom-0 z-10 p-4">
+                <h2 className="line-clamp-2 font-display text-lg font-semibold leading-tight text-fg drop-shadow">
+                    <Link href={gameHref(game.slug, searchQuery, currentPage)} className="after:absolute after:inset-0 focus-visible:outline-none">
+                        {game.name}
+                    </Link>
                 </h2>
-
-                {/* Genres */}
-                <div className="flex flex-wrap gap-1">
-                    {game.genres.slice(0, 2).map((genre) => (
-                        <span key={genre.id} className="rounded border border-line-strong px-2 py-0.5 text-xs text-muted">
-                            {genre.name}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Platforms */}
-                <div className="flex flex-wrap gap-1">
-                    {game.platforms?.slice(0, 3).map(({ platform }) => (
-                        <span key={platform.id} className="rounded bg-surface-2 px-2 py-0.5 text-xs text-subtle">
-                            {platform.name}
-                        </span>
-                    ))}
-                    {game.platforms?.length > 3 && (
-                        <span className="rounded bg-surface-2 px-2 py-0.5 text-xs text-subtle">
-                            +{game.platforms.length - 3}
-                        </span>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="mt-auto flex items-center justify-between border-t border-line pt-3 font-mono text-xs text-muted">
+                <div className="mt-1 flex items-center gap-3 font-mono text-xs text-muted">
                     <span className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-accent text-accent" aria-hidden /> {game.rating.toFixed(1)}
                     </span>
-                    <span>{game.released?.slice(0, 4) ?? "N/A"}</span>
+                    <span>{game.released?.slice(0, 4) ?? "TBA"}</span>
+                    {game.genres[0] && <span className="truncate font-sans">{game.genres.slice(0, 2).map((g) => g.name).join(" · ")}</span>}
+                </div>
+                <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 group-hover:grid-rows-[1fr]">
+                    <div className="overflow-hidden">
+                        <div className="flex flex-wrap gap-1 pt-2">
+                            {game.platforms.slice(0, 4).map(({ platform }) => (
+                                <span key={platform.id} className="rounded bg-base/70 px-2 py-0.5 text-[11px] text-muted">
+                                    {platform.name}
+                                </span>
+                            ))}
+                            {game.platforms.length > 4 && (
+                                <span className="rounded bg-base/70 px-2 py-0.5 text-[11px] text-muted">+{game.platforms.length - 4}</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </Link>
+
+            {/* keyboard focus ring for the stretched link */}
+            <div className="pointer-events-none absolute inset-0 z-30 rounded-lg ring-accent group-has-[a:focus-visible]:ring-2" />
+        </article>
     )
 }

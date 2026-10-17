@@ -39,14 +39,15 @@ export const getUserBySlug = cache(async (userId: string, slug: string) => {
     })
 })
 
-export async function createUserShelf(userId: string, rawgId: number, title: string, slug: string, backgroundImage: string | null) {
+export async function createUserShelf(userId: string, rawgId: number, title: string, slug: string, backgroundImage: string | null, status?: ShelfStatus) {
     return await prisma.shelf.create({
         data: {
             userId,
             rawgId,
             title,
             slug,
-            backgroundImage
+            backgroundImage,
+            status
         }
     })
 }
@@ -73,36 +74,37 @@ export const getDashboardData = cache(async (userId: string) => {
 
     if (!user) return null
 
-    const [stats, topGames, totalGames] = await Promise.all([
+    const [stats, topGames, totals, rated] = await Promise.all([
         prisma.shelf.groupBy({
             by: ['status'],
             where: { userId },
-            _count: {
-                id: true
-            },
-            _sum: {
-                playtime: true
-            },
-            _avg: {
-                rating: true
-            }
+            _count: { id: true },
+            _sum: { playtime: true }
         }),
         prisma.shelf.findMany({
             where: {
                 userId,
-                status: {
-                    notIn: ['PLANNED', 'DROPPED']
-                },
+                status: { notIn: ['PLANNED', 'DROPPED'] },
             },
             orderBy: [
-                { rating: 'desc' },
-                { playtime: 'desc' },
+                // Postgres sorts NULL first on DESC; unrated games belong at the bottom
+                { rating: { sort: 'desc', nulls: 'last' } },
+                { playtime: { sort: 'desc', nulls: 'last' } },
                 { createdAt: 'desc' }
             ],
-            take: 5
+            take: 5,
+            select: { id: true, title: true, slug: true, backgroundImage: true, rating: true, playtime: true, status: true }
         }),
-        prisma.shelf.count({
-            where: { userId }
+        prisma.shelf.aggregate({
+            where: { userId },
+            _count: { id: true },
+            _sum: { playtime: true }
+        }),
+        // ratings of 0 are legacy "cleared" values, not real scores
+        prisma.shelf.aggregate({
+            where: { userId, rating: { gt: 0 } },
+            _avg: { rating: true },
+            _count: { rating: true }
         })
     ])
 
@@ -111,12 +113,14 @@ export const getDashboardData = cache(async (userId: string) => {
         stats: stats.reduce((acc, curr) => {
             acc[curr.status] = {
                 count: curr._count.id,
-                playtime: curr._sum.playtime || 0,
-                rating: curr._avg.rating || 0
+                playtime: curr._sum.playtime || 0
             }
             return acc
-        }, {} as Record<ShelfStatus, { count: number; playtime: number; rating: number }>),
-        totalGames,
+        }, {} as Partial<Record<ShelfStatus, { count: number; playtime: number }>>),
+        totalGames: totals._count.id,
+        totalHours: totals._sum.playtime ?? 0,
+        averageRating: rated._avg.rating,
+        ratedGames: rated._count.rating,
         topGames
     }
 })

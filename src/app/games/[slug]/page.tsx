@@ -1,6 +1,7 @@
-import { getGameBySlug } from '@/lib/rawg'
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react'
+import { getGameBySlug } from '@/lib/rawg'
+import Backdrop from '@/components/Backdrop';
 import GameHeaderDetail from '@/components/games/GameHeaderDetail';
 import GameContentDetail from '@/components/games/GameContentDetail';
 
@@ -14,26 +15,23 @@ export default async function DetailGamePage({ params, searchParams }: PageProps
     const search = await searchParams;
     const game = await getGameBySlug(slug);
 
-    const backUrl = search.from == 'search' && search.q ? `/games?${new URLSearchParams({ search: search.q, page: search.page || '1' })}` : '/games'
+    const fromSearch = search.from == 'search' && search.q
+    const backUrl = fromSearch ? `/games?${new URLSearchParams({ search: search.q!, page: search.page || '1' })}` : '/games'
 
     return (
-        <div className='relative flex min-h-screen animate-fade-up flex-col items-center px-6 py-16'>
-            {/* Back Button */}
-            <div className="mb-8 w-full max-w-6xl">
-                <Link
-                    href={backUrl}
-                    className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent"
-                >
+        <div className="relative isolate -mt-16 animate-fade-up pt-16">
+            <Backdrop src={game.background_image} />
+
+            <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
+                <Link href={backUrl} className="inline-flex w-fit items-center gap-2 text-sm text-muted transition-colors hover:text-accent">
                     <ArrowLeft className='h-4 w-4' />
-                    Back to {search.from == 'search' ? `Search Results` : `Games`}
+                    {fromSearch ? 'Back to results' : 'Back to Discover'}
                 </Link>
+
+                <GameHeaderDetail game={game} slug={slug} />
+
+                <GameContentDetail game={game} />
             </div>
-
-            {/* Hero Section */}
-            <GameHeaderDetail game={game} slug={slug} />
-
-            {/* Main Content */}
-            <GameContentDetail game={game} />
         </div>
     )
 }

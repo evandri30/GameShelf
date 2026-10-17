@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { connection } from "next/server";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -69,7 +70,8 @@ export const { handlers, auth } = NextAuth({
 // auth() touches crypto and the clock before it reads the session cookie, which Cache Components
 // rejects during prerendering. connection() marks the caller as request-time first.
 // Use this in Server Components; route handlers and Server Actions can call auth() directly.
-export async function getSession() {
+// cache(): the navbar, mobile tab bar and page share one session lookup per request.
+export const getSession = cache(async () => {
     await connection()
     return auth()
-}
+})

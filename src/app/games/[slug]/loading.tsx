@@ -1,16 +1,12 @@
-import { HeroSkeleton } from "@/components/Skeletons"
+import { DetailHeaderSkeleton } from "@/components/Skeletons"
 import { Skeleton } from "@/components/ui/Card"
 
 export default function Loading() {
     return (
-        <div className="flex flex-col items-center px-6 py-16">
-            <div className="mb-8 w-full max-w-6xl">
-                <Skeleton className="h-5 w-32" />
-            </div>
-            <div className="w-full max-w-6xl">
-                <HeroSkeleton />
-            </div>
-            <div className="mt-8 grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
+            <Skeleton className="h-5 w-36" />
+            <DetailHeaderSkeleton />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <Skeleton className="h-96 lg:col-span-2" />
                 <Skeleton className="h-96" />
             </div>

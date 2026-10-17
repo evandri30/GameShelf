@@ -10,16 +10,16 @@ export default function ShareButton({ userId }: { userId: string }) {
 
         try {
             await navigator.clipboard.writeText(url)
-            toast.success("Dashboard link copied to clipboard!")
+            toast.success("Link to your stats copied!")
         } catch {
             toast.error("Failed to copy link.")
         }
     }
 
     return (
-        <Button onClick={handleShare} size="lg">
+        <Button onClick={handleShare}>
             <Share2 className="h-4 w-4" />
-            <span>Share Dashboard</span>
+            <span>Share my stats</span>
         </Button>
     )
 }

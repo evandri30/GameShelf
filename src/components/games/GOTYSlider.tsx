@@ -1,149 +1,121 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Trophy } from "lucide-react"
+import { Star, Trophy } from "lucide-react"
 import type { GotyGame } from "@/constants/gotywinner"
 import { Badge, MetacriticBadge } from "@/components/ui/Badge"
 import { SectionHeading } from "@/components/ui/Card"
 import { buttonClass } from "@/components/ui/Button"
-import GOTYSelect from "./GOTYSelect"
 import { getCroppedImageUrl } from "@/utils/image"
 
 type GOTYSliderProps = {
     games: GotyGame[]
 }
 
+const INTERVAL_MS = 6000
+
+// One featured banner + a rail of thumbnails as the only navigation
 export default function GOTYSlider({ games }: GOTYSliderProps) {
     const [currentIndex, setCurrentIndex] = useState(0)
-    const [isHovered, setIsHovered] = useState(false)
-
-    const nextSlide = useCallback(() => {
-        setCurrentIndex((prev) => (prev + 1) % games.length)
-    }, [games.length])
-
-    const prevSlide = () => {
-        setCurrentIndex((prev) => (prev - 1 + games.length) % games.length)
-    }
-
-    const goToSlide = (index: number) => {
-        setCurrentIndex(index)
-    }
+    const [paused, setPaused] = useState(false)
 
     useEffect(() => {
-        if (!isHovered && games.length > 0) {
-            const interval = setInterval(nextSlide, 5000)
-            return () => clearInterval(interval)
-        }
-    }, [isHovered, nextSlide, games.length])
+        if (paused || games.length < 2) return
+        const timer = setTimeout(() => setCurrentIndex((i) => (i + 1) % games.length), INTERVAL_MS)
+        return () => clearTimeout(timer)
+    }, [paused, currentIndex, games.length])
 
     if (!games.length) return null
 
-    const currentGame = games[currentIndex]
+    const game = games[currentIndex]
 
     return (
         <section
-            className="mt-12 w-full max-w-7xl"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className="w-full space-y-4"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+            aria-roledescription="carousel"
+            aria-label="Game of the Year winners"
         >
-            <div className="mb-6">
-                <SectionHeading title="Game of the Year Winners" icon={Trophy} />
-            </div>
+            <SectionHeading title="Game of the Year winners" icon={Trophy} />
 
-            <div className="relative h-100 w-full overflow-hidden rounded-lg border border-line bg-surface md:h-125">
-                <div className="absolute inset-0">
-                    {currentGame.background_image ? (
-                        <Image
-                            src={getCroppedImageUrl(currentGame.background_image, 1200, 720)}
-                            alt={currentGame.name}
-                            fill
-                            sizes="(max-width: 1280px) 100vw, 1280px"
-                            className="object-cover"
-                            // only the visible slide is rendered, and it is the LCP element of /games
-                            loading="eager"
-                            fetchPriority={currentIndex === 0 ? "high" : "auto"}
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-surface-2" />
-                    )}
+            <div className="relative h-[26rem] w-full overflow-hidden rounded-lg border border-line bg-surface md:h-[30rem]">
+                {game.background_image ? (
+                    <Image
+                        key={game.id}
+                        src={getCroppedImageUrl(game.background_image, 1280)}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1280px) 100vw, 1280px"
+                        className="animate-fade-in object-cover"
+                        // only the visible slide is rendered, and it is the LCP element of /games
+                        loading="eager"
+                        fetchPriority={currentIndex === 0 ? "high" : "auto"}
+                    />
+                ) : (
+                    <div className="h-full w-full bg-surface-2" />
+                )}
+                <div className="absolute inset-0 bg-linear-to-t from-base via-base/50 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-r from-base/80 via-transparent to-transparent" />
 
-                    <div className="absolute inset-0 bg-linear-to-t from-base via-base/60 to-transparent" />
-                </div>
-
-                <div className="relative h-full flex flex-col justify-end p-8 md:p-12">
-
-                    <div className="mb-4 flex items-center gap-2">
+                <div key={`info-${game.id}`} className="absolute inset-x-0 bottom-0 max-w-2xl animate-fade-up p-6 md:p-10" aria-live="polite">
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
                         <Badge className="border-accent/50 bg-accent/15 font-display font-bold uppercase tracking-wider text-accent">
-                            <Trophy className="h-3.5 w-3.5" /> GOTY {currentGame.awardYear}
+                            <Trophy className="h-3.5 w-3.5" /> GOTY {game.awardYear}
                         </Badge>
-                        {currentGame.metacritic && <MetacriticBadge score={currentGame.metacritic} label className="hidden md:inline-flex" />}
-                        {currentGame.esrb_rating && <Badge className="hidden border-line-strong bg-base/70 text-muted md:inline-flex">{currentGame.esrb_rating.name}</Badge>}
+                        {game.metacritic && <MetacriticBadge score={game.metacritic} label />}
                     </div>
 
-                    <h3 className="mb-3 font-display text-4xl font-bold text-fg drop-shadow-lg md:text-5xl">
-                        {currentGame.name}
+                    <h3 className="font-display text-4xl font-bold uppercase leading-none tracking-tight text-fg drop-shadow-lg md:text-6xl">
+                        {game.name}
                     </h3>
 
-                    <div className="mb-4 hidden flex-wrap items-center gap-4 text-sm text-muted md:flex">
-                        <span className="flex items-center gap-1">
-                            ⭐ {currentGame.rating.toFixed(1)}
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted">
+                        <span className="flex items-center gap-1 font-mono text-fg">
+                            <Star className="h-4 w-4 fill-accent text-accent" aria-hidden /> {game.rating.toFixed(1)}
                         </span>
-                        <span>•</span>
-                        <span>{currentGame.released?.slice(0, 4) ?? "N/A"}</span>
-                        <span>•</span>
-                        <div className="flex flex-wrap gap-2">
-                            {currentGame.genres.slice(0, 3).map((genre) => (
-                                <span
-                                    key={genre.id}
-                                    className="rounded border border-line-strong bg-base/60 px-2 py-0.5 text-xs text-fg backdrop-blur-sm"
-                                >
-                                    {genre.name}
-                                </span>
-                            ))}
-                        </div>
+                        <span className="font-mono">{game.released?.slice(0, 4) ?? "N/A"}</span>
+                        <span>{game.genres.map((g) => g.name).join(" · ")}</span>
                     </div>
 
-                    <Link
-                        href={`/games/${currentGame.slug}`}
-                        className={buttonClass("primary", "lg", "mb-4 w-fit")}
-                    >
-                        View Details
+                    <Link href={`/games/${game.slug}`} className={buttonClass("primary", "lg", "mt-6")}>
+                        View details
                     </Link>
                 </div>
 
-                <button
-                    onClick={prevSlide}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer rounded-full border border-line-strong bg-base/60 p-2 text-fg backdrop-blur-sm transition-colors hover:border-accent hover:text-accent"
-                    aria-label="Previous slide"
-                >
-                    <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                    onClick={nextSlide}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer rounded-full border border-line-strong bg-base/60 p-2 text-fg backdrop-blur-sm transition-colors hover:border-accent hover:text-accent"
-                    aria-label="Next slide"
-                >
-                    <ChevronRight className="w-6 h-6" />
-                </button>
-
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                    {games.map((game, index) => (
-                        <button
-                            key={game.id}
-                            onClick={() => goToSlide(index)}
-                            className={`h-2 rounded-full transition-all ${index === currentIndex
-                                ? "w-8 bg-accent"
-                                : "w-2 bg-fg/40 hover:bg-fg/70"
-                                }`}
-                            aria-label={`Go to slide ${index + 1}`}
-                        />
-                    ))}
-                </div>
+                {/* progress bar for the auto-advance */}
+                {!paused && (
+                    <div key={`progress-${currentIndex}`} className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-progress bg-accent" aria-hidden />
+                )}
             </div>
 
-            <GOTYSelect games={games} currentIndex={currentIndex} onSelectGame={goToSlide} />
+            {/* Thumbnail rail */}
+            <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]" role="tablist" aria-label="Choose a winner">
+                {games.map((g, index) => (
+                    <button
+                        key={g.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={index === currentIndex}
+                        aria-label={`${g.name}, GOTY ${g.awardYear}`}
+                        onClick={() => setCurrentIndex(index)}
+                        className={`group relative h-20 w-36 shrink-0 cursor-pointer snap-start overflow-hidden rounded-md border-2 transition ${index === currentIndex
+                            ? "border-accent"
+                            : "border-transparent opacity-50 hover:opacity-100"}`}
+                    >
+                        {g.background_image && (
+                            <Image src={getCroppedImageUrl(g.background_image, 420)} alt="" fill sizes="144px" loading="eager" className="object-cover" />
+                        )}
+                        <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-base/90 to-transparent px-2 pb-1 pt-4 text-left font-mono text-[11px] font-bold text-fg">
+                            {g.awardYear}
+                        </span>
+                    </button>
+                ))}
+            </div>
         </section>
     )
 }

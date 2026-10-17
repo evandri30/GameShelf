@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     if (!data) return { title: 'Not Found | GameShelf' }
 
     return {
-        title: `${data.user.name || 'User'}'s Dashboard | GameShelf`,
+        title: `${data.user.name || 'User'}'s Stats | GameShelf`,
         description: `View ${data.user.name || 'User'}'s top games and playing statistics.`,
     }
 }
@@ -22,34 +22,34 @@ export default async function SharedDashboardPage({ params }: { params: Promise<
         return notFound()
     }
 
-    const { user, stats, totalGames, topGames } = data
+    const name = data.user.name || 'User'
 
     return (
-        <div className="relative flex min-h-screen animate-fade-up flex-col items-center px-6 py-16">
-            <div className="mx-auto mb-16 flex w-full max-w-5xl flex-col items-center gap-6 text-center">
-                {user.image ? (
+        <div className="mx-auto flex max-w-6xl animate-fade-up flex-col gap-10 px-6 py-12">
+            <div className="flex items-center gap-5">
+                {data.user.image ? (
                     <Image
-                        src={user.image}
-                        alt={`${user.name}'s avatar`}
-                        width={120}
-                        height={120}
-                        className="rounded-full border-4 border-line object-cover shadow-xl"
+                        src={data.user.image}
+                        alt={`${name}'s avatar`}
+                        width={80}
+                        height={80}
+                        className="rounded-full border-2 border-accent object-cover"
                     />
                 ) : (
-                    <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full border-4 border-line bg-surface font-display text-5xl font-bold text-accent shadow-xl">
-                        {user.name?.[0]?.toUpperCase() || 'U'}
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-accent bg-surface font-display text-3xl font-bold text-accent">
+                        {name[0].toUpperCase()}
                     </div>
                 )}
 
-                <div className="space-y-2 lg:space-y-3">
-                    <h1 className="font-display text-4xl font-bold uppercase tracking-wide text-fg md:text-5xl">
-                        {user.name || 'User'}&apos;s Dashboard
+                <div className="space-y-1">
+                    <h1 className="font-display text-3xl font-bold uppercase tracking-wide md:text-5xl">
+                        {name}&apos;s Stats
                     </h1>
-                    <p className="text-lg font-medium text-muted">Gaming Journey & Collection</p>
+                    <p className="text-muted">Gaming journey & collection on GameShelf</p>
                 </div>
             </div>
 
-            <DashboardStats stats={stats} totalGames={totalGames} topGames={topGames} />
+            <DashboardStats data={data} />
         </div>
     )
 }

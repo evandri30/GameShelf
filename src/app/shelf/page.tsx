@@ -14,11 +14,8 @@ export default async function ShelfPage() {
     const shelf = await getUserShelf(session.user.id)
 
     return (
-        <div className="relative flex min-h-screen animate-fade-up flex-col items-center px-6 py-16 text-center">
-            {/* Header */}
-            <PageHeader />
-
-            {/* Shelf Card */}
+        <div className="mx-auto flex max-w-7xl animate-fade-up flex-col gap-8 px-6 py-12">
+            <PageHeader total={shelf.length} />
             <ShelfFilter shelf={shelf} />
         </div>
     )

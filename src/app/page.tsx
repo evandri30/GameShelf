@@ -5,41 +5,45 @@ import { features } from "@/constants/feature";
 import { howItsWork } from "@/constants/howitswork"
 import CTA from "@/components/landing/CTA";
 import Header from "@/components/landing/Header";
+import { SectionHeading } from "@/components/ui/Card";
 
 export default function Home() {
+  // -mt-16: the hero backdrop runs under the translucent navbar
   return (
-    <div className="relative flex min-h-screen flex-col items-center px-6 py-16 text-center">
-      <section className="flex max-w-3xl animate-fade-up flex-col items-center gap-4">
-        <Header />
-      </section>
+    <div className="-mt-16">
+      <Header />
 
-      {/* Features */}
-      <section className="mt-20 grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
-        {features.map((feature) => (
-          <FeatureCard key={feature.title} {...feature} />
-        ))}
-      </section>
+      <div className="mx-auto flex max-w-6xl flex-col gap-28 px-6 pb-8">
+        {/* Features */}
+        <section id="features" className="scroll-mt-24 space-y-8">
+          <SectionHeading title="What you get" description="Everything you need to keep your backlog under control." />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} {...feature} />
+            ))}
+          </div>
+        </section>
 
-      {/* Bottom CTA */}
-      <section className="mt-24 text-center">
-        <CTA />
-      </section>
+        {/* How It Works */}
+        <section className="space-y-8">
+          <SectionHeading title="How it works" />
+          <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {howItsWork.map((step) => (
+              <HowItsWork key={step.no} {...step} />
+            ))}
+          </ol>
+        </section>
 
-      {/* How Its Works */}
-      <section className="mt-24 text-center">
-        <h2 className="font-display text-2xl font-semibold uppercase tracking-wide">How It Works</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-muted">
-          GameShelf helps you manage your gaming collection with ease. Discover new games, track your progress, and share your shelves with friends.
-        </p>
-        {howItsWork.map((step) => (
-          <HowItsWork key={step.no} {...step} />
-        ))}
-      </section>
+        {/* FAQ */}
+        <section>
+          <FAQ />
+        </section>
 
-      {/* FAQ */}
-      <section className="mt-24 text-center">
-        <FAQ />
-      </section>
+        {/* Bottom CTA */}
+        <section>
+          <CTA />
+        </section>
+      </div>
     </div>
   );
 }

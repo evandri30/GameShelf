@@ -2,6 +2,7 @@ import { getSession } from '@/auth'
 import { getUserBySlug } from '@/services/shelf.service'
 import { notFound, redirect } from 'next/navigation'
 import ShelfDetail from '@/components/shelf/ShelfDetail'
+import Backdrop from '@/components/Backdrop'
 import type { Metadata } from 'next'
 
 type Props = {
@@ -53,7 +54,8 @@ export default async function ShelfDetailPage({ params }: Props) {
     }
 
     return (
-        <div className="relative min-h-screen animate-fade-up">
+        <div className="relative isolate -mt-16 animate-fade-up pt-16">
+            <Backdrop src={shelf.backgroundImage} />
             <ShelfDetail shelf={shelf} />
         </div>
     )

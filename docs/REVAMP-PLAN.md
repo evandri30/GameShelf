@@ -7,11 +7,11 @@ Dokumen ini berisi rencana rombak UI dan performance GameShelf, dari Fase 0 samp
 | 0 | Ukur baseline | ✅ Selesai (sebagian, lihat catatan) |
 | 1 | Fondasi design system | ✅ Selesai |
 | 2 | Performance | ✅ Selesai |
-| 3 | Redesign per halaman | ⏳ Belum |
-| 4 | Bersih-bersih fitur gak relevan | ⏳ Belum |
+| 3 | Redesign per halaman | ✅ Selesai |
+| 4 | Bersih-bersih fitur gak relevan | ⏳ Sebagian (ikut kebawa Fase 3) |
 | 5 | Fitur baru (dipilih satu-satu) | ⏳ Belum |
 
-Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Perubahan Fase 1–2 **belum di-commit**.
+Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Fase 1–2 sudah di-commit (`f2f3ea6`). Fase 3 **belum di-commit**.
 
 ---
 
@@ -197,19 +197,96 @@ Prisma:
 
 ---
 
-## Fase 3 — Redesign per Halaman ⏳
+## Fase 3 — Redesign per Halaman ✅
 
-| Halaman | Rencana |
+### Komponen bersama baru
+
+| File | Isi |
 |---|---|
-| **Navbar** | Link **Discover · My Shelf · Stats** dengan active state, search global (submit ke `/games?search=`), avatar menu (logout). Mobile: **bottom tab bar** fixed. Komponen yang pakai `usePathname` dibungkus `<Suspense>` (aturan Cache Components). |
-| **Landing** `/` | Hero dengan kolase cover art (dari `gotyWinners`), headline + 1 CTA, 3 feature, CTA penutup. Tombol "Learn More" yang sekarang link ke `/` (dead link) diarahkan ke section features atau dihapus. |
-| **Discover** `/games` | Banner GOTY tunggal + rail thumbnail. Grid **poster card**: cover besar, info muncul saat hover, tombol quick-add. Search bar sticky. **Fix:** `searchQuery` belum di-`encodeURIComponent` di `Pagination.tsx` & `GameCard.tsx`. |
-| **Game detail** | Backdrop full-bleed blur + poster, panel aksi (add + pilih status langsung), deskripsi collapse "read more", platform/genre jadi chip, card "Links" (isinya cuma 1 link) digabung ke Game Info. |
-| **My Shelf** | Tab status **dengan jumlah**, sort (terbaru/rating/judul), search lokal. Card: menu titik-tiga (ubah status, hapus). |
-| **Shelf detail** | Hero sinematik, status segmented control, playtime & notes inline-edit + autosave. Badge status dobel dihapus. |
-| **Stats** `/dashboard` | KPI strip (total, completed, total jam, rata-rata rating), donut status, Top 5, tombol share. |
-| **Auth** | Split layout: form di kiri, kolase cover art di kanan (desktop). Label `htmlFor`. |
-| **Footer** | Dirampingkan. |
+| `components/ui/Menu.tsx` | Dropdown yang nutup kalau klik di luar, tekan Escape, atau item dipilih. Dipakai di menu user dan menu titik-tiga di card shelf. |
+| `components/nav/NavLinks.tsx` | `NavLinks` (link desktop + active state) dan `MobileTabBar` (tab bar bawah di mobile). Pakai `usePathname`. |
+| `components/CoverCollage.tsx` | Dinding cover art GOTY yang dimiringkan, dipakai di hero landing dan halaman auth. |
+| `components/Backdrop.tsx` | Backdrop blur full-bleed dari art game, dipakai di detail game dan shelf detail. |
+| `components/games/QuickAddButton.tsx` | Tombol tambah 1-tap dari card Discover. Game masuk sebagai PLANNED, dan kalau udah ada di shelf tombolnya berubah jadi tanda ✓. |
+| `components/games/ExpandableHtml.tsx` | Deskripsi panjang dipotong + tombol "Read more". Tombolnya cuma muncul kalau teksnya memang kepanjangan. |
+| `components/auth/AuthForm.tsx` | Form login/register dipisah dari halaman. Logic-nya sama persis. |
+
+### Per halaman
+
+**Navbar** (`components/Navbar.tsx`)
+- Link **Discover · My Shelf · Stats** dengan garis aksen di link yang aktif.
+- Search global pakai `next/form`, submit ke `/games?search=` (muncul di layar ≥ `lg`).
+- Avatar membuka menu (Stats, My Shelf, Logout).
+- **Tab bar bawah di mobile** dirender lewat `MobileNavSlot` setelah footer. Harus di luar `<nav>`, karena `backdrop-filter` bikin `position: fixed` ikut "terkurung" di dalam navbar.
+- `getSession()` sekarang dibungkus React `cache()`, jadi navbar, tab bar, dan halaman cuma baca session sekali per request.
+
+**Landing** (`/`)
+- Hero setinggi layar dengan kolase cover art di belakang (nyelip di bawah navbar transparan).
+- Headline baru *"Every game you play. One shelf."*
+- CTA "See how it works" menuju `#features`, gantiin tombol "Learn More" yang dulu link mati ke `/`.
+- FAQ pakai `<details>` native (tanpa JS). Copy feature diperbarui.
+
+**Discover** (`/games`)
+- Search bar sticky di bawah navbar + jumlah game/hasil.
+- Slider GOTY: satu banner + rail thumbnail berisi tahun. Panah dan titik dibuang, ada progress bar auto-advance yang berhenti saat di-hover/fokus, dan `GOTYSelect.tsx` dihapus.
+- Card 16:9 dengan cover art: judul di atas gambar, platform muncul saat hover, quick-add di pojok.
+- Link card nutup seluruh card (stretched link), jadi tombol quick-add gak nested di dalam `<a>`.
+- Pagination baru dengan URL yang **di-encode benar** (`URLSearchParams`); dulu query search gak di-encode.
+- State kosong "No games found".
+- `components/games/PageHeader.tsx` dihapus.
+
+**Detail game** (`/games/[slug]`)
+- Backdrop blur, key art di kiri, judul/badge/rating/studio di kanan.
+- Panel aksi: **pilih status + Add to shelf**. Setelah berhasil, tampil "In your shelf" + link "Open in shelf" dan halaman gak pindah.
+- `addToShelf` sekarang menerima `status` opsional (schema + service ikut diupdate).
+- Deskripsi bisa di-collapse.
+- Card "Game info" sekarang berisi rilis, rata-rata playtime, developer, publisher, dan website. Card "Links" lama digabung ke sini.
+- Platform, genre, dan tag tampil sebagai chip.
+
+**My Shelf** (`/shelf`)
+- Tab status **dengan jumlah game** per tab.
+- Search lokal + sort (Recently added / Highest rated / Title A–Z).
+- Card menampilkan rating + jam main.
+- Menu titik-tiga berisi "Move to …" dan "Remove from shelf". Hapus tetap lewat `ConfirmDialog`, yang sekarang cuma dirender saat dibuka.
+- Empty state baru dengan tombol ke Discover.
+- `constants/filtersshelf.ts` dihapus.
+
+**Shelf detail** (`/shelf/[slug]`)
+- Backdrop + key art, info "On your shelf since …", rating bintang, dan link ke halaman game.
+- **Status pakai segmented control** (4 tombol), badge status dobel dihapus.
+- **Jam main** tersimpan saat keluar dari field atau tekan Enter.
+- **Catatan autosave** 0,9 detik setelah berhenti ngetik dan saat blur. Ada indikator "Saving…/Saved", jadi gak ada toast tiap simpan.
+- Hapus rating sekarang nyimpan `null` (bukan `0`), jadi gak ikut nurunin rata-rata.
+
+**Stats** (`/dashboard` + `/dashboard/share/[id]`)
+- **KPI strip:** jumlah game, completed + persentase completion, total jam, dan rata-rata rating (+ jumlah game yang dirating).
+- Donut status + daftar per status (jumlah & jam).
+- **Top 5 jadi daftar ranking** dengan thumbnail.
+- Bar chart "Playtime by status" dihapus (jatah Fase 4, ikut sekalian).
+- `getDashboardData` sekarang juga menghitung `totalHours`, `averageRating`, dan `ratedGames`.
+- **Bug fix:** top games dulu urut `rating DESC`, dan Postgres naruh `NULL` duluan, jadi game yang belum dirating malah muncul paling atas. Sekarang pakai `nulls: 'last'`.
+- `DashboardCharts.tsx` di-rename jadi `StatusBreakdown.tsx`.
+
+**Auth** (`/auth`)
+- Split layout: form di kiri, kolase cover art + tagline di kanan (desktop).
+- Label `htmlFor`, `autoComplete`, `aria-invalid`/`aria-describedby` buat error, dan tombol show/hide password punya label.
+
+**Loading skeleton:** semua `loading.tsx` disesuaikan dengan layout baru (`DetailHeaderSkeleton` dan `CardGridSkeleton` di `components/Skeletons.tsx`).
+
+**Footer:** tetap seperti Fase 1, udah ramping.
+
+### Performa & detail teknis
+- Gambar yang posisinya above the fold sekarang `loading="eager"`, berdasarkan warning LCP dari Next di dev:
+  - card baris pertama (shelf, dan Discover kalau gak ada banner GOTY)
+  - thumbnail rail GOTY dan top games
+  - backdrop blur
+  - kolase (`fetchPriority="low"`)
+- `images.qualities: [40, 75]` di `next.config.ts`. Next 16 cuma nerima quality yang terdaftar, dan `40` dipakai buat backdrop blur.
+- Token `animate-progress` buat progress bar slider.
+- **Hati-hati:** `text-base` di Tailwind itu **ukuran font**, bukan warna token `base`. Buat teks hitam di atas warna aksen pakai `text-accent-fg`.
+
+### Diverifikasi di browser
+Login/logout, quick-add, add dengan status, pindah status lewat menu (jumlah di tab ikut berubah), hapus, rating/status/jam main/catatan (autosave), Stats, landing, auth, dan tampilan mobile 390px (tab bar bawah, gak ada scroll horizontal).
 
 ---
 
@@ -217,8 +294,9 @@ Prisma:
 
 - **Section "How It Works"** di landing: isinya dobel sama feature card. Hapus `components/landing/HowItsWork.tsx`, `constants/howitswork.ts`, dan tipe `HowItsWorkProps`.
 - **FAQ** dipangkas jadi 3 pertanyaan atau dihapus. Jawaban "share your collection" gak akurat, karena yang bisa di-share cuma dashboard.
-- **Navigasi GOTY yang dobel tiga** (panah + titik + thumbnail strip) disisain satu aja.
-- **Bar chart "Playtime by status"** diganti angka KPI total jam.
+- ~~**Navigasi GOTY yang dobel tiga** (panah + titik + thumbnail strip) disisain satu aja.~~ ✅ Selesai di Fase 3.
+- ~~**Bar chart "Playtime by status"** diganti angka KPI total jam.~~ ✅ Selesai di Fase 3.
+- ~~Tombol "Learn More" yang link mati ke `/`.~~ ✅ Selesai di Fase 3.
 - **API route yang udah gak dipakai:** `/api/shelf`, `/api/shelf/[id]`, dan `/api/shelf/detail/[slug]`.
 - **Opsional:** ganti `react-toastify` dengan `sonner` yang lebih ringan.
 - **Sisa OAuth:** kolom `User.provider` di-drop lewat migration. `User.image` dipertahankan kalau mau fitur avatar nanti.
@@ -260,7 +338,7 @@ AUTH_TRUST_HOST=true npx next start -p 3100
 - [x] Shelf: ubah status langsung berubah dan tersimpan; hapus pakai dialog dan jumlah game ikut ke-update
 - [x] Shelf detail: rating, jam main, catatan tersimpan dan gak saling menimpa (dicek langsung ke DB)
 - [x] Dashboard: KPI, donut CSS, top games
-- [ ] Tampilan mobile (dicek lagi setelah Fase 3, karena bottom tab bar baru ada di sana)
+- [x] Tampilan mobile 390px: tab bar bawah, gak ada scroll horizontal (Fase 3)
 - [ ] Lighthouse / LCP sebelum vs sesudah
 
 ## Aturan penting buat ngoding selanjutnya
@@ -271,4 +349,7 @@ AUTH_TRUST_HOST=true npx next start -p 3100
 - **Mutasi data** lewat server action di `src/app/shelf/actions.ts`, bukan `fetch` ke `/api`.
 - **Warna** pakai token (`bg-surface`, `text-muted`, `text-accent`, …), jangan `zinc-*` atau hex langsung.
 - **Status shelf** (label/warna) selalu ambil dari `src/constants/status.ts`.
-- **Gambar RAWG** lewat `getCroppedImageUrl(url, width)`, dan selalu isi prop `sizes`.
+- **Gambar RAWG** lewat `getCroppedImageUrl(url, width)`, dan selalu isi prop `sizes`. Gambar yang posisinya above the fold pakai `loading="eager"`.
+- **Session di Server Component** pakai `getSession()` (sudah di-cache per request), jadi aman dipanggil berkali-kali.
+- **Dropdown** pakai `components/ui/Menu.tsx`. Kalau parent-nya `overflow-hidden`, menu bakal kepotong; taruh clipping di wrapper gambar aja.
+- **Jangan pakai `text-base` buat warna.** Itu ukuran font; pakai `text-accent-fg` / `text-fg`.

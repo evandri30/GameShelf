@@ -1,11 +1,13 @@
-export default function PageHeader() {
+export default function PageHeader({ total }: { total: number }) {
     return (
-        <section className="flex max-w-3xl flex-col items-center gap-4">
+        <section className="space-y-2">
             <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">
-                Shelf
+                My Shelf
             </h1>
-            <p className="max-w-xl text-muted">
-                Track your journey. Manage what you play. Remember what you finished.
+            <p className="text-muted">
+                {total > 0
+                    ? <><span className="font-mono text-accent">{total}</span> {total === 1 ? "game" : "games"}. Track your journey, remember what you finished.</>
+                    : "Track your journey. Manage what you play. Remember what you finished."}
             </p>
         </section>
     )

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Chakra_Petch, Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import Navbar from "../components/Navbar";
+import Navbar, { MobileNavSlot } from "../components/Navbar";
 import Footer from "../components/Footer";
 import "./globals.css";
 
@@ -46,6 +46,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <MobileNavSlot />
         <ToastContainer position="top-center" autoClose={1500} theme="dark" />
       </body>
     </html>
