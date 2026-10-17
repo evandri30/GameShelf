@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma'
 import bcrypt from "bcryptjs";
 import { RegisterSchema } from "@/schemas/auth.schema"
+import { generateUniqueUsername } from "@/services/user.service"
 
 
 export async function POST(req: Request) {
@@ -33,7 +34,9 @@ export async function POST(req: Request) {
             data: {
                 email,
                 password: hashedPassword,
-                name
+                name,
+                // can be changed later from the Stats page
+                username: await generateUniqueUsername(name || email)
             }
         })
 

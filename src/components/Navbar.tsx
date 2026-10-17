@@ -1,109 +1,80 @@
-'use client';
-
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { CircleUserRound } from "lucide-react";
-import { toast } from "react-toastify";
-import { useState, useRef, useEffect } from "react";
+import Form from "next/form";
+import { Suspense } from "react";
+import { Search } from "lucide-react";
+import { getSession } from "@/auth";
+import { buttonClass } from "./ui/Button";
+import { Skeleton } from "./ui/Card";
+import UserMenu from "./UserMenu";
+import { MobileTabBar, NavLinks } from "./nav/NavLinks";
 
-export default function Navbar() {
-    const { data: session, status } = useSession();
-    const [isOpen, setIsOpen] = useState(false)
+function NavSearch() {
+    return (
+        <Form action="/games" className="relative hidden lg:block" role="search">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden />
+            <input
+                name="search"
+                type="search"
+                placeholder="Search games..."
+                aria-label="Search games"
+                className="h-9 w-56 rounded-md border border-line bg-surface pl-9 pr-3 text-sm text-fg transition-[border-color,width] placeholder:text-subtle focus:w-72 focus:border-accent focus:outline-none"
+            />
+        </Form>
+    )
+}
 
-    const ref = useRef<HTMLDivElement>(null)
+// Session is read on the server, so there is no client session fetch and no "Loading..." flash
+async function NavContent() {
+    const session = await getSession();
 
-    useEffect(() => {
-        const handler = (e: MouseEvent | TouchEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                setIsOpen(false)
-            }
-        }
-
-        document.addEventListener("mousedown", handler)
-        document.addEventListener("touchstart", handler)
-
-        return () => {
-            document.removeEventListener("mousedown", handler)
-            document.removeEventListener("touchstart", handler)
-        }
-    }, [])
+    if (!session?.user) {
+        return (
+            <div className="flex flex-1 justify-end">
+                <Link href="/auth" className={buttonClass("primary", "sm")}>
+                    Get Started
+                </Link>
+            </div>
+        );
+    }
 
     return (
-        <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur
-                    border-b border-zinc-800 bg-black/60">
-            <div className="mx-auto max-w-7xl px-6 py-4
-                      flex items-center justify-between">
+        <div className="flex flex-1 items-center justify-between gap-4">
+            <NavLinks />
+            <div className="ml-auto flex items-center gap-3">
+                <NavSearch />
+                <UserMenu name={session.user.name ?? session.user.email ?? "Player"} />
+            </div>
+        </div>
+    );
+}
 
-                {/* Logo */}
-                <Link
-                    href="/"
-                    className="text-xl font-semibold tracking-tight
-                     hover:opacity-80 transition"
-                >
-                    GameShelf
+async function MobileNav() {
+    const session = await getSession();
+    return session?.user ? <MobileTabBar /> : null;
+}
+
+export default function Navbar() {
+    return (
+        <nav className="fixed inset-x-0 top-0 z-50 border-b border-line bg-base/80 backdrop-blur-md">
+            <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-6">
+                <Link href="/" className="shrink-0 font-display text-xl font-bold uppercase tracking-wider transition-opacity hover:opacity-80">
+                    Game<span className="text-accent">Shelf</span>
                 </Link>
 
-                {/* Right side */}
-                <div className="flex items-center">
-                    {
-                        status === "loading" ?
-                            (<p className="text-sm text-zinc-400">Loading...</p>) :
-                            (session ? (
-                                <div className="relative" ref={ref}>
-                                    {/* Icon */}
-                                    <CircleUserRound
-                                        className="w-8 h-8 text-white cursor-pointer"
-                                        onClick={() => setIsOpen(!isOpen)}
-                                    />
-
-                                    {/* Dropdown */}
-                                    <div className={`absolute right-0 mt-2 w-40 
-                  bg-zinc-900 border border-zinc-800 
-                  rounded-lg shadow-lg 
-                  ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"} 
-                  transition-all duration-200`}>
-
-                                        <Link
-                                            href="/dashboard"
-                                            className="block px-4 py-2 text-sm text-white hover:bg-zinc-800 rounded-t-lg transition"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            Dashboard
-                                        </Link>
-                                        <Link
-                                            href="/shelf"
-                                            className="block px-4 py-2 text-sm text-white hover:bg-zinc-800 transition"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            Shelf
-                                        </Link>
-
-                                        <button
-                                            onClick={() => {
-                                                signOut({ callbackUrl: "/" });
-                                                toast.success("Logged out successfully");
-                                                setIsOpen(false)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-zinc-800 rounded-b-lg transition"
-                                        >
-                                            Logout
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <Link
-                                    href="/auth"
-                                    className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium
-                            hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(255,255,255,0.25)]
-                            transition"
-                                >
-                                    Get Started
-                                </Link>
-                            )
-                            )
-                    }
-                </div>
+                <Suspense fallback={<div className="flex flex-1 justify-end"><Skeleton className="h-9 w-9 rounded-full" /></div>}>
+                    <NavContent />
+                </Suspense>
             </div>
         </nav>
+    );
+}
+
+// Rendered after the footer in the layout: it's a fixed bar outside the blurred <nav>
+// (backdrop-filter would otherwise trap position: fixed)
+export function MobileNavSlot() {
+    return (
+        <Suspense fallback={null}>
+            <MobileNav />
+        </Suspense>
     );
 }

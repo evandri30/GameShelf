@@ -1,70 +1,67 @@
 import Image from 'next/image';
+import { Star } from 'lucide-react';
 import AddToShelfButton from './AddToShelfButton';
 import type { GameDetailProps } from "@/types"
+import type { ShelfStatus } from '@/generated/prisma/browser';
 import { getCroppedImageUrl } from '@/utils/image';
+import { Badge, MetacriticBadge } from '@/components/ui/Badge';
 
 type Props = {
     game: GameDetailProps;
     slug: string;
+    entry?: { status: ShelfStatus; slug: string };
 }
 
+export default function PageHeaderDetail({ game, slug, entry }: Props) {
+    const year = game.released?.slice(0, 4)
+    const studio = game.developers[0]?.name
 
-export default function PageHeaderDetail({ game, slug }: Props) {
     return (
-        <section className='w-full max-w-6xl'>
-            <div className='relative w-full h-100 rounded-xl overflow-hidden border border-zinc-800'>
+        <section className="grid w-full items-end gap-8 md:grid-cols-[1.3fr_1fr]">
+            {/* Key art */}
+            <div className="relative aspect-video overflow-hidden rounded-lg border border-line shadow-2xl shadow-black/60">
                 {game.background_image ? (
                     <Image
-                        src={getCroppedImageUrl(game.background_image, 1200, 720)}
+                        src={getCroppedImageUrl(game.background_image, 1280)}
                         alt={game.name}
-                        loading="lazy"
-                        priority={false}
                         fill
-                        sizes='100vw'
+                        // the key art is the LCP element of this page
+                        preload
+                        sizes="(max-width: 768px) 100vw, 640px"
                         className="object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-500">
-                        No Image Available
-                    </div>
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">No Image Available</div>
                 )}
-                <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+            </div>
 
-                {/* Title Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.8)] mb-4">
-                        {game.name}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-3">
-                        {game.metacritic && (
-                            <span className={`text-sm font-bold px-3 py-1 rounded-md border
-                                                ${game.metacritic >= 75
-                                    ? "border-green-500 text-green-400 bg-green-950/50"
-                                    : game.metacritic >= 50
-                                        ? "border-yellow-500 text-yellow-400 bg-yellow-950/50"
-                                        : "border-red-500 text-red-400 bg-red-950/50"
-                                }`}>
-                                Metacritic: {game.metacritic}
-                            </span>
-                        )}
-                        {game.esrb_rating && (
-                            <span className="text-sm px-3 py-1 rounded-md bg-zinc-900/80 border border-zinc-700 text-zinc-300">
-                                {game.esrb_rating.name}
-                            </span>
-                        )}
-                        <span className="text-sm px-3 py-1 rounded-md bg-zinc-900/80 border border-zinc-700 text-zinc-300">
-                            ⭐ {game.rating.toFixed(1)} / {game.rating_top}
-                        </span>
-                        <div>
-                            <AddToShelfButton
-                                rawgId={game.id}
-                                title={game.name}
-                                slug={slug}
-                                backgroundImage={game.background_image}
-                            />
-                        </div>
-                    </div>
+            {/* Title + actions */}
+            <div className="space-y-5">
+                <div className="flex flex-wrap items-center gap-2">
+                    {game.metacritic && <MetacriticBadge score={game.metacritic} label />}
+                    {game.esrb_rating && <Badge>{game.esrb_rating.name}</Badge>}
                 </div>
+
+                <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight md:text-5xl lg:text-6xl">
+                    {game.name}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                    <span className="flex items-center gap-1 font-mono text-fg">
+                        <Star className="h-4 w-4 fill-accent text-accent" aria-hidden /> {game.rating.toFixed(1)}
+                        <span className="text-muted">/ {game.rating_top}</span>
+                    </span>
+                    {year && <span className="font-mono">{year}</span>}
+                    {studio && <span>{studio}</span>}
+                </div>
+
+                <AddToShelfButton
+                    rawgId={game.id}
+                    title={game.name}
+                    slug={slug}
+                    backgroundImage={game.background_image}
+                    entry={entry}
+                />
             </div>
         </section>
     )

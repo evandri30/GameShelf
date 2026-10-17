@@ -1,20 +1,20 @@
-import { Search, FileCheck, Share2 } from "lucide-react";
+import { Compass, ListChecks, Share2 } from "lucide-react";
 import type { FeatureCardProps } from "@/types";
 
 export const features: FeatureCardProps[] = [
     {
-        icon: Search,
+        icon: Compass,
         title: "Discover",
-        description: "Find new games tailored to your taste",
+        description: "Browse hundreds of thousands of games, from this year's hits to every Game of the Year winner.",
     },
     {
-        icon: FileCheck,
+        icon: ListChecks,
         title: "Track",
-        description: "Keep tabs on your gaming progress",
+        description: "Mark games as planned, playing, completed or dropped, then log your hours, rating and notes.",
     },
     {
         icon: Share2,
         title: "Share",
-        description: "Share your Shelf to your friend",
+        description: "Turn your shelf into stats and share your gaming dashboard with friends.",
     },
 ];

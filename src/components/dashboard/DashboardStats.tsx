@@ -1,89 +1,99 @@
-import { Gamepad2, Play, CheckCircle2, XCircle, Clock } from "lucide-react"
-import { ShelfStatus, Shelf } from '@/generated/prisma/browser'
+import { CheckCircle2, Clock, Gamepad2, Star, Trophy } from "lucide-react"
+import type { ShelfStatus } from '@/generated/prisma/browser'
 import Image from "next/image"
 import Link from "next/link"
-import DashboardCharts from "./DashboardCharts"
+import { getCroppedImageUrl } from "@/utils/image"
+import { Card } from "@/components/ui/Card"
+import StatusBreakdown from "./StatusBreakdown"
 
-interface DashboardStatsProps {
-    stats: Record<ShelfStatus, { count: number; playtime: number; rating: number }>
+export type DashboardData = {
+    stats: Partial<Record<ShelfStatus, { count: number; playtime: number }>>
     totalGames: number
-    topGames: Shelf[]
+    totalHours: number
+    averageRating: number | null
+    ratedGames: number
+    topGames: { id: string; title: string; slug: string; backgroundImage: string | null; rating: number | null; playtime: number | null }[]
 }
 
-export default function DashboardStats({ stats, totalGames, topGames }: DashboardStatsProps) {
-    const statCards = [
-        { title: "Total Games", value: totalGames, icon: Gamepad2, color: "text-zinc-400" },
-        { title: "Playing", value: stats.PLAYING?.count || 0, icon: Play, color: "text-zinc-400" },
-        { title: "Completed", value: stats.COMPLETED?.count || 0, icon: CheckCircle2, color: "text-zinc-400" },
-        { title: "Planned", value: stats.PLANNED?.count || 0, icon: Clock, color: "text-zinc-400" },
-        { title: "Dropped", value: stats.DROPPED?.count || 0, icon: XCircle, color: "text-zinc-400" },
+export default function DashboardStats({ data }: { data: DashboardData }) {
+    const completed = data.stats.COMPLETED?.count ?? 0
+    const completionRate = data.totalGames ? Math.round((completed / data.totalGames) * 100) : 0
+
+    const kpis = [
+        { label: "Games", value: data.totalGames.toLocaleString("en-US"), hint: "on the shelf", icon: Gamepad2 },
+        { label: "Completed", value: completed.toLocaleString("en-US"), hint: `${completionRate}% completion`, icon: CheckCircle2 },
+        { label: "Hours played", value: data.totalHours.toLocaleString("en-US"), hint: "logged so far", icon: Clock },
+        {
+            label: "Avg. rating",
+            value: data.averageRating ? data.averageRating.toFixed(1) : "–",
+            hint: data.ratedGames ? `from ${data.ratedGames} rated` : "nothing rated yet",
+            icon: Star,
+        },
     ]
 
     return (
-        <div className="w-full max-w-5xl mx-auto space-y-16">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {statCards.map((stat, i) => {
-                    const Icon = stat.icon
-                    return (
-                        <div key={i} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition hover:-translate-y-1 hover:border-zinc-600">
-                            <Icon className={`w-8 h-8 ${stat.color}`} />
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-white tracking-tight">{stat.value}</p>
-                                <p className="text-sm text-zinc-400 font-medium tracking-wide mt-1">{stat.title}</p>
-                            </div>
+        <div className="space-y-6">
+            {/* KPI strip */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {kpis.map(({ label, value, hint, icon: Icon }) => (
+                    <Card key={label} className="p-5">
+                        <div className="flex items-center justify-between text-muted">
+                            <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+                            <Icon className="h-4 w-4 text-accent" aria-hidden />
                         </div>
-                    )
-                })}
+                        <p className="mt-3 font-mono text-4xl font-bold tracking-tight text-fg">{value}</p>
+                        <p className="mt-1 text-xs text-subtle">{hint}</p>
+                    </Card>
+                ))}
             </div>
 
-            {/* Visual Charts */}
-            <DashboardCharts stats={stats} />
+            <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+                <StatusBreakdown stats={data.stats} />
 
-            {/* Top Games Section */}
-            {topGames.length > 0 && (
-                <div className="flex flex-col gap-4 mt-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Gamepad2 className="w-6 h-6 text-zinc-400" />
-                        <h2 className="text-2xl font-bold text-white">Top Games</h2>
+                {/* Top games */}
+                <Card className="p-6">
+                    <div className="mb-4 flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-accent" aria-hidden />
+                        <h2 className="font-display text-lg font-semibold uppercase tracking-wide">Top games</h2>
                     </div>
-                    
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-                        {topGames.map((game, idx) => (
-                            <Link href={`/games/${game.rawgId}`} key={game.id} className="group relative flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/50 aspect-[3/4] hover:-translate-y-1 hover:border-zinc-600 transition block">
-                                
-                                {/* Ranking Badge */}
-                                <div className="absolute top-2 left-2 z-20 text-xs font-bold px-2 py-0.5 rounded-md border border-zinc-700 bg-zinc-900/80 text-zinc-400">
-                                    #{idx + 1}
-                                </div>
 
-                                {game.backgroundImage ? (
-                                    <>
-                                        <Image 
-                                            src={game.backgroundImage} 
-                                            alt={game.title}
-                                            fill
-                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-zinc-900/95 via-zinc-900/70 to-transparent flex flex-col justify-end p-4 z-10 transition-opacity">
-                                            <h3 className="text-white font-semibold text-sm md:text-base leading-snug line-clamp-2">{game.title}</h3>
-                                            {(game.rating ?? 0) > 0 && (
-                                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-700/50 text-xs text-zinc-400 mt-2">
-                                                    <span>⭐ {game.rating}/5</span>
-                                                </div>
+                    {data.topGames.length === 0 ? (
+                        <p className="py-10 text-center text-sm text-subtle">
+                            Rate games you&apos;re playing or have completed and your favorites show up here.
+                        </p>
+                    ) : (
+                        <ol className="space-y-2">
+                            {data.topGames.map((game, idx) => (
+                                <li key={game.id}>
+                                    <Link
+                                        href={`/games/${game.slug}`}
+                                        className="group flex items-center gap-4 rounded-md p-2 transition-colors hover:bg-surface-2"
+                                    >
+                                        <span className={`w-6 text-center font-mono text-lg font-bold ${idx === 0 ? "text-accent" : "text-subtle"}`}>{idx + 1}</span>
+                                        <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded border border-line">
+                                            {game.backgroundImage ? (
+                                                <Image src={getCroppedImageUrl(game.backgroundImage, 200)} alt="" fill sizes="96px" loading="eager" className="object-cover" />
+                                            ) : (
+                                                <div className="h-full w-full bg-surface-2" />
                                             )}
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500 text-sm">
-                                        No Image
-                                    </div>
-                                )}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            )}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate font-semibold text-fg group-hover:text-accent">{game.title}</p>
+                                            <p className="flex items-center gap-3 font-mono text-xs text-muted">
+                                                <span className="flex items-center gap-1">
+                                                    <Star className={`h-3.5 w-3.5 ${game.rating ? "fill-accent text-accent" : ""}`} aria-hidden />
+                                                    {game.rating ? `${game.rating}/5` : "Unrated"}
+                                                </span>
+                                                <span>{game.playtime ?? 0}h</span>
+                                            </p>
+                                        </div>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ol>
+                    )}
+                </Card>
+            </div>
         </div>
     )
 }

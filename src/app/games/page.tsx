@@ -1,60 +1,73 @@
-import { Suspense } from "react"
-import { getGames, getGOTYGames, searchGames } from "@/lib/rawg"
-import { FadeIn } from "@/components/AnimatedSection"
-import PageHeader from "@/components/games/PageHeader"
+import { getGenres, getParentPlatforms, listGames } from "@/lib/rawg"
+import { getSession } from "@/auth"
+import { getUserShelfIndex } from "@/services/shelf.service"
+import { gotyWinners } from "@/constants/gotywinner"
+import { FILTER_KEYS, discoverHref, type DiscoverQuery } from "@/constants/discover"
 import SearchBar from "@/components/games/SearchBar"
+import DiscoverFilters from "@/components/games/DiscoverFilters"
 import GameGrind from "@/components/games/GameGrind"
 import Pagination from "@/components/games/Pagination"
 import GOTYSlider from "@/components/games/GOTYSlider"
 
 type PageProps = {
-    searchParams: Promise<{ page?: string, search?: string }>
+    searchParams: Promise<{ page?: string; search?: string; genre?: string; platform?: string; ordering?: string; year?: string }>
 }
 
 export default async function GamePage({ searchParams }: PageProps) {
     const params = await searchParams;
-    const currentPage = Number(params.page) || 1;
-    const searchQuery = params.search || "";
+    const query: DiscoverQuery = {
+        page: Number(params.page) || 1,
+        search: params.search || undefined,
+        genre: params.genre || undefined,
+        platform: params.platform || undefined,
+        ordering: params.ordering || undefined,
+        year: params.year || undefined,
+    }
+    const hasFilters = FILTER_KEYS.some((key) => query[key])
 
-    const [data, gotyData] = await Promise.all([
-        searchQuery ? searchGames(searchQuery, currentPage) : getGames(currentPage),
-        !searchQuery && currentPage === 1 ? getGOTYGames() : Promise.resolve(null)
-    ]);
+    const [data, genres, platforms, session] = await Promise.all([
+        listGames(query),
+        getGenres(),
+        getParentPlatforms(),
+        getSession(),
+    ])
+    // rawgId -> shelf entry, to badge games the user already has
+    const shelfIndex = session?.user?.id ? await getUserShelfIndex(session.user.id) : {}
 
+    const currentYear = new Date().getUTCFullYear()
+    const years = Array.from({ length: currentYear - 1979 }, (_, i) => {
+        const year = String(currentYear - i)
+        return { value: year, label: year }
+    })
+
+    const showGoty = !query.search && !hasFilters && query.page === 1
     const totalPages = Math.ceil(data.count / 20);
-    const hasNext = data.next !== null;
-    const hasPrev = data.previous !== null;
+
+    const heading = query.search ? `Results for "${query.search}"` : hasFilters ? "Filtered games" : "Popular right now"
 
     return (
-        <FadeIn>
-            <main className="relative min-h-screen overflow-hidden px-6 py-16 flex flex-col items-center">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
+        <div className="mx-auto flex max-w-7xl animate-fade-up flex-col gap-12 px-6 pb-16">
+            <SearchBar searchQuery={query.search ?? ""} totalGames={data.count} query={query} />
 
-                {/* Header */}
-                <PageHeader totalGames={data.count} />
+            <DiscoverFilters query={query} genres={genres} platforms={platforms} years={years} />
 
-                {/* GOTY Slidder */}
-                {gotyData && gotyData.results.length > 0 && (
-                    <GOTYSlider games={gotyData.results} />
-                )}
+            {showGoty && <GOTYSlider games={gotyWinners} />}
 
-                {/* SearchBar */}
-                <Suspense fallback={<div className="mt-12 w-full max-w-2xl h-12 bg-zinc-900/50 rounded-xl animate-pulse"></div>}>
-                    <SearchBar searchQuery={searchQuery} totalGames={data.count} />
-                </Suspense>
+            <GameGrind
+                games={data.results}
+                heading={heading}
+                backHref={discoverHref(query)}
+                shelfIndex={shelfIndex}
+                aboveFold={!showGoty}
+            />
 
-                {/* Games Grid */}
-                <GameGrind games={data.results} searchQuery={searchQuery} currentPage={currentPage} />
-
-                {/* Pagination */}
-                <Pagination
-                    currentPage={currentPage}
-                    hasNext={hasNext}
-                    hasPrev={hasPrev}
-                    totalPages={totalPages}
-                    searchQuery={searchQuery}
-                />
-            </main>
-        </FadeIn>
+            <Pagination
+                currentPage={query.page!}
+                hasNext={data.next !== null}
+                hasPrev={data.previous !== null}
+                totalPages={totalPages}
+                query={query}
+            />
+        </div>
     )
 }

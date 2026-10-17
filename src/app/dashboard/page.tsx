@@ -1,47 +1,61 @@
-import { auth } from '@/auth'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getDashboardData } from '@/services/shelf.service'
-import { FadeIn } from '@/components/AnimatedSection'
+import { Sparkles } from 'lucide-react'
+import { getSession } from '@/auth'
+import { getCompletionsByMonth, getDashboardData, getReviewYears } from '@/services/shelf.service'
 import DashboardStats from '@/components/dashboard/DashboardStats'
-import ShareButton from '@/components/dashboard/ShareButton'
-import { ShelfStatus } from '@/generated/prisma/browser'
+import CompletionChart, { MONTH_LABELS } from '@/components/dashboard/CompletionChart'
+import ProfileCard from '@/components/dashboard/ProfileCard'
+import { buttonClass } from '@/components/ui/Button'
 
 export default async function DashboardPage() {
-    const session = await auth()
+    const session = await getSession()
 
     if (!session?.user?.id) {
         redirect('/auth')
     }
 
-    const data = await getDashboardData(session.user.id)
+    const [data, months, reviewYears] = await Promise.all([
+        getDashboardData(session.user.id),
+        getCompletionsByMonth(session.user.id),
+        getReviewYears(session.user.id),
+    ])
 
     if (!data) {
         return (
-            <main className="relative min-h-screen px-6 py-16 flex flex-col items-center justify-center text-center">
-                <p className="text-white/60">Failed to load dashboard data.</p>
-            </main>
+            <div className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+                <p className="text-muted">Failed to load dashboard data.</p>
+            </div>
         )
     }
 
+    // newest year with a finished game, falling back to this year
+    const reviewYear = reviewYears[0] ?? new Date().getUTCFullYear()
+
     return (
-        <FadeIn>
-            <main className="relative min-h-screen overflow-hidden px-6 py-16 flex flex-col items-center">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-
-                <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-16 px-4 md:px-0">
-                    <div className="text-left space-y-2 lg:space-y-4">
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-white via-white/90 to-white/60 tracking-tight">Your Dashboard</h1>
-                        <p className="text-lg text-zinc-400  font-medium">Overview of your gaming journey</p>
-                    </div>
-                    <ShareButton userId={session.user.id} />
+        <div className="mx-auto flex max-w-6xl animate-fade-up flex-col gap-10 px-6 py-12">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+                <div className="space-y-2">
+                    <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">Your Stats</h1>
+                    <p className="text-muted">Your gaming journey, by the numbers.</p>
                 </div>
+                <Link href={`/dashboard/review/${reviewYear}`} className={buttonClass("primary", "md")}>
+                    <Sparkles className="h-4 w-4" /> {reviewYear} in review
+                </Link>
+            </div>
 
-                <DashboardStats
-                    stats={data.stats as Record<ShelfStatus, { count: number; playtime: number; rating: number }>}
-                    totalGames={data.totalGames}
-                    topGames={data.topGames}
-                />
-            </main>
-        </FadeIn>
+            <DashboardStats data={data} />
+
+            <CompletionChart
+                title="Finished, last 12 months"
+                buckets={months.map((m) => ({
+                    // show the year under January so the timeline stays readable
+                    label: m.month === 0 ? `${MONTH_LABELS[0]} '${String(m.year).slice(2)}` : MONTH_LABELS[m.month],
+                    count: m.count,
+                }))}
+            />
+
+            <ProfileCard username={data.user.username} isPublic={data.user.isPublic} />
+        </div>
     )
 }

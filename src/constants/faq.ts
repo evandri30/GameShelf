@@ -5,30 +5,18 @@ export const faqData: FaqItemProps[] = [
         id: 1,
         question: "What is GameShelf?",
         answer:
-            "GameShelf is a personal game collection manager where you can discover new games, track what you play, and share your collection with friends."
+            "A personal game tracker. Discover games, put them on your shelf as planned, playing, completed or dropped, and log your hours, rating and notes as you go."
     },
     {
         id: 2,
-        question: "Do I need an account to use GameShelf?",
+        question: "Is it free?",
         answer:
-            "Yes ! to use GameShelf, you'll need to create an account."
+            "Yes, completely. You just need a free account so your shelf is saved. It works in any browser, on desktop or mobile."
     },
     {
         id: 3,
-        question: "Is GameShelf free to use?",
+        question: "Can I share my shelf with friends?",
         answer:
-            "Yes! GameShelf is completely free to use with all core features available."
-    },
-    {
-        id: 4,
-        question: "Can I share my game collection with others?",
-        answer:
-            "Absolutely. you can share your collection and your progress with your friends."
-    },
-    {
-        id: 5,
-        question: "What platforms does GameShelf support?",
-        answer:
-            "GameShelf works directly in your browser, so you can access it on desktop or mobile without installing anything."
+            "You can share your stats page: total games, hours played, status breakdown and your top-rated games. Use the Share button on the Stats page to copy the link."
     }
 ];

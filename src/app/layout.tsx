@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { FadeIn, ScrollFadeIn } from '@/components/AnimatedSection'
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import "./globals.css";
-import Provider from "./Provider";
+import { Chakra_Petch, Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import Navbar, { MobileNavSlot } from "../components/Navbar";
+import Footer from "../components/Footer";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +14,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const chakraPetch = Chakra_Petch({
+  variable: "--font-chakra",
+  subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -31,20 +35,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${chakraPetch.variable} flex min-h-dvh flex-col font-sans antialiased`}
       >
-        <Provider>
-          <FadeIn>
-            <Navbar />
-          </FadeIn>
-          <main className="pt-16">
-            <ToastContainer position="top-center" autoClose={1000} />
-            {children}
-          </main>
-          <ScrollFadeIn>
-            <Footer />
-          </ScrollFadeIn>
-        </Provider>
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(198,244,50,0.07),transparent_55%)]"
+        />
+        <Navbar />
+        <main className="flex-1 pt-16">
+          {children}
+        </main>
+        <Footer />
+        <MobileNavSlot />
+        <ToastContainer position="top-center" autoClose={1500} theme="dark" />
       </body>
     </html>
   );
