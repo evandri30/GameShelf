@@ -11,7 +11,7 @@ Dokumen ini berisi rencana rombak UI dan performance GameShelf, dari Fase 0 samp
 | 4 | Bersih-bersih fitur gak relevan | ✅ Selesai |
 | 5 | Fitur baru | ✅ Item 1–7 selesai, item 8 (import Steam) belum |
 
-Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Commit: Fase 1–2 `f2f3ea6`, Fase 3 `3afd92c`, Fase 4 `3cee8d7`. Fase 5 **belum di-commit**.
+Branch kerja: `feat/ui-perf-foundation` (dibuat dari `chore/deps-upgrade`). Commit: Fase 1–2 `f2f3ea6`, Fase 3 `3afd92c`, Fase 4 `3cee8d7`, Fase 5 `7805ea4`.
 
 ---
 
