@@ -1,7 +1,9 @@
 import Link from "next/link"
 import Image from "next/image";
+import { Star } from "lucide-react"
 import type { GameProps } from "@/types"
 import { getCroppedImageUrl } from "@/utils/image"
+import { Badge, MetacriticBadge } from "@/components/ui/Badge"
 
 type GameCardProps = {
     game: GameProps
@@ -14,60 +16,39 @@ export default function GameCard({ game, searchQuery, currentPage }: GameCardPro
         <Link
             href={`/games/${game.slug}${searchQuery ? `?from=search&q=${searchQuery}&page=${currentPage}` : ``}`}
             key={game.id}
-            className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden hover:-translate-y-1 hover:border-zinc-600 transition"
+            className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] hover:border-accent/60 hover:shadow-glow"
         >
             {/* Thumbnail */}
-            <div className="relative w-full h-40">
+            <div className="relative h-40 w-full overflow-hidden">
                 {game.background_image ? (
                     <Image
                         src={getCroppedImageUrl(game.background_image)}
                         alt={game.name}
-                        loading="lazy"
-                        priority={false}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm">
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-sm text-subtle">
                         No Image
                     </div>
                 )}
 
-                {/* Metacritic Badge */}
-                {game.metacritic && (
-                    <span className={`absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-md border
-                  ${game.metacritic >= 75
-                            ? "border-green-500 text-green-400"
-                            : game.metacritic >= 50
-                                ? "border-yellow-500 text-yellow-400"
-                                : "border-red-500 text-red-400"
-                        }`}>
-                        {game.metacritic}
-                    </span>
-                )}
+                {game.metacritic && <MetacriticBadge score={game.metacritic} className="absolute right-2 top-2" />}
 
-                {/* ESRB Badge */}
-                {game.esrb_rating && (
-                    <span className="absolute bottom-2 left-2 text-xs px-2 py-0.5 rounded-md bg-zinc-900/80 border border-zinc-700 text-zinc-400">
-                        {game.esrb_rating.name}
-                    </span>
-                )}
+                {game.esrb_rating && <Badge className="absolute bottom-2 left-2 border-line-strong bg-base/80 text-muted">{game.esrb_rating.name}</Badge>}
             </div>
 
             {/* Info */}
-            <div className="flex flex-col gap-2 p-4 flex-1">
-                <h2 className="font-semibold text-white text-sm leading-snug line-clamp-2">
+            <div className="flex flex-1 flex-col gap-2 p-4">
+                <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-fg transition-colors group-hover:text-accent">
                     {game.name}
                 </h2>
 
                 {/* Genres */}
                 <div className="flex flex-wrap gap-1">
                     {game.genres.slice(0, 2).map((genre) => (
-                        <span
-                            key={genre.id}
-                            className="text-xs px-2 py-0.5 rounded-full border border-zinc-700 text-zinc-400"
-                        >
+                        <span key={genre.id} className="rounded border border-line-strong px-2 py-0.5 text-xs text-muted">
                             {genre.name}
                         </span>
                     ))}
@@ -76,23 +57,22 @@ export default function GameCard({ game, searchQuery, currentPage }: GameCardPro
                 {/* Platforms */}
                 <div className="flex flex-wrap gap-1">
                     {game.platforms?.slice(0, 3).map(({ platform }) => (
-                        <span
-                            key={platform.id}
-                            className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500"
-                        >
+                        <span key={platform.id} className="rounded bg-surface-2 px-2 py-0.5 text-xs text-subtle">
                             {platform.name}
                         </span>
                     ))}
                     {game.platforms?.length > 3 && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500">
+                        <span className="rounded bg-surface-2 px-2 py-0.5 text-xs text-subtle">
                             +{game.platforms.length - 3}
                         </span>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-zinc-800 text-xs text-zinc-400">
-                    <span>⭐ {game.rating.toFixed(1)}</span>
+                <div className="mt-auto flex items-center justify-between border-t border-line pt-3 font-mono text-xs text-muted">
+                    <span className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-accent text-accent" aria-hidden /> {game.rating.toFixed(1)}
+                    </span>
                     <span>{game.released?.slice(0, 4) ?? "N/A"}</span>
                 </div>
             </div>

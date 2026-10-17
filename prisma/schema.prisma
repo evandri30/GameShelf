@@ -41,7 +41,8 @@ model Shelf {
   updatedAt DateTime     @updatedAt
   @@unique([userId, rawgId])
   @@unique([userId, slug])
-  @@index([userId])
+  // userId-only lookups are covered by the unique indexes above (userId is their leading column)
+  @@index([userId, status])
   @@index([slug])
 }
 

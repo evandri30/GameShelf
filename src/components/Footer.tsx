@@ -1,44 +1,33 @@
 import { Mail } from 'lucide-react'
+import { cacheLife } from 'next/cache'
 import { GithubIcon, LinkedinIcon } from './icons/BrandIcons'
 
-export default function Footer() {
-    return (
-        <footer className="mt-32 border-t border-zinc-800">
-            <div className="mx-auto max-w-7xl px-6 py-12
-                      flex flex-col md:flex-row items-center
-                      justify-between gap-6 text-sm text-zinc-400">
+// new Date() is not allowed in the prerendered shell; a cached scope keeps the footer static
+async function CurrentYear() {
+    'use cache'
+    cacheLife('days')
+    return <>{new Date().getFullYear()}</>
+}
 
-                {/* Left */}
+export default function Footer() {
+    const linkClass = "text-muted transition-colors hover:text-accent"
+
+    return (
+        <footer className="mt-24 border-t border-line">
+            <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted md:flex-row">
                 <p>
-                    © {new Date().getFullYear()} GameShelf. All rights reserved.
+                    © <CurrentYear /> <span className="font-display font-semibold uppercase tracking-wider text-fg">GameShelf</span>
                 </p>
 
-                {/* Links */}
-                <div className="flex gap-6">
-                    <a
-                        href="mailto:evandriridhoh@gmail.com"
-                        className="hover:text-white transition"
-                        aria-label='Email Us'
-                    >
-                        <Mail />
+                <div className="flex gap-5">
+                    <a href="mailto:evandriridhoh@gmail.com" className={linkClass} aria-label="Email Us">
+                        <Mail className="h-5 w-5" />
                     </a>
-                    <a
-                        href="https://github.com/evandri30"
-                        className="hover:text-white transition"
-                        aria-label='Github Account'
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <GithubIcon />
+                    <a href="https://github.com/evandri30" className={linkClass} aria-label="Github Account" target="_blank" rel="noopener noreferrer">
+                        <GithubIcon className="h-5 w-5" />
                     </a>
-                    <a
-                        href="https://linkedin.com/in/evandriridho"
-                        className="hover:text-white transition"
-                        aria-label='Connect me'
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <LinkedinIcon />
+                    <a href="https://linkedin.com/in/evandriridho" className={linkClass} aria-label="Connect me" target="_blank" rel="noopener noreferrer">
+                        <LinkedinIcon className="h-5 w-5" />
                     </a>
                 </div>
             </div>

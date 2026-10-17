@@ -8,8 +8,8 @@ export default function CTA() {
             </h2>
             <Link
                 href="/auth"
-                className="mt-4 inline-block px-8 py-3 rounded-lg bg-white text-black font-medium
-                             hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(255,255,255,0.25)]
+                className="mt-4 inline-block px-8 py-3 rounded-lg bg-accent text-accent-fg font-medium
+                             hover:-translate-y-0.5 hover:shadow-glow
                              transition"
             >
                 Create Your Shelf

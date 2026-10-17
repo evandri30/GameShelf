@@ -5,7 +5,7 @@ import Link from "next/link"
 export default function Header() {
     return (
         <>
-            <span className="flex justify-center items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-400">
+            <span className="flex justify-center items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-xs text-muted">
                 <Gamepad2 /> Built for gamers
             </span>
 
@@ -13,7 +13,7 @@ export default function Header() {
                 GameShelf
             </h1>
 
-            <p className="text-lg text-zinc-300 max-w-2xl">
+            <p className="text-lg text-fg/85 max-w-2xl">
                 Discover, track, and share your favorite video games — all in one place.
             </p>
 
@@ -21,9 +21,9 @@ export default function Header() {
                 <Link
                     href="/auth"
                     className="group relative inline-flex items-center gap-2
-             px-7 py-3 rounded-lg bg-white text-black font-medium
+             px-7 py-3 rounded-lg bg-accent text-accent-fg font-medium
              hover:-translate-y-0.5
-             hover:shadow-[0_15px_35px_rgba(255,255,255,0.25)]
+             hover:shadow-glow
              transition"
                 >
                     Get Started
@@ -36,14 +36,14 @@ export default function Header() {
 
                 <Link
                     href={"/"}
-                    className="px-7 py-3 rounded-lg border border-zinc-700 text-zinc-300
-                    hover:bg-zinc-900 transition"
+                    className="px-7 py-3 rounded-lg border border-line-strong text-fg/85
+                    hover:bg-surface-2 transition"
                 >
                     Learn More
                 </Link>
             </div>
 
-            <p className="mt-3 text-sm text-zinc-400">
+            <p className="mt-3 text-sm text-muted">
                 No ads. No clutter. Just your games.
             </p>
         </>

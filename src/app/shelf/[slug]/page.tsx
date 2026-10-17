@@ -1,7 +1,6 @@
-import { auth } from '@/auth'
+import { getSession } from '@/auth'
 import { getUserBySlug } from '@/services/shelf.service'
 import { notFound, redirect } from 'next/navigation'
-import { FadeIn } from '@/components/AnimatedSection'
 import ShelfDetail from '@/components/shelf/ShelfDetail'
 import type { Metadata } from 'next'
 
@@ -12,7 +11,7 @@ type Props = {
 // Generate metadata untuk SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
-    const session = await auth()
+    const session = await getSession()
 
     if (!session?.user?.id) {
         return {
@@ -41,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ShelfDetailPage({ params }: Props) {
     const { slug } = await params
-    const session = await auth()
+    const session = await getSession()
 
     if (!session?.user?.id) {
         redirect('/auth')
@@ -54,12 +53,8 @@ export default async function ShelfDetailPage({ params }: Props) {
     }
 
     return (
-        <FadeIn>
-            <main className="relative min-h-screen overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-
-                <ShelfDetail shelf={shelf} />
-            </main>
-        </FadeIn>
+        <div className="relative min-h-screen animate-fade-up">
+            <ShelfDetail shelf={shelf} />
+        </div>
     )
 }

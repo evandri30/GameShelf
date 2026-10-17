@@ -11,7 +11,7 @@ export default function FAQ() {
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-12">
-            <h2 className="text-3xl font-bold text-center mb-10 text-white">
+            <h2 className="text-3xl font-bold text-center mb-10 text-fg">
                 Frequently Asked Questions
             </h2>
 
@@ -20,8 +20,8 @@ export default function FAQ() {
                     <div
                         key={faq.id}
                         className={`rounded-xl border transition-all duration-300 ${isOpen === faq.id
-                            ? "border-white/20 bg-zinc-900"
-                            : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+                            ? "border-accent/40 bg-surface"
+                            : "border-line bg-surface hover:border-line-strong"
                             }`}
                     >
                         <button
@@ -30,12 +30,12 @@ export default function FAQ() {
                             aria-controls={`faq-answer-${faq.id}`}
                             className="w-full px-6 py-5 flex justify-between items-center text-left"
                         >
-                            <span id={`faq-question-${faq.id}`} className="font-medium text-lg text-white">
+                            <span id={`faq-question-${faq.id}`} className="font-medium text-lg text-fg">
                                 {faq.question}
                             </span>
 
                             <span
-                                className={`text-xl transition-transform duration-300 ${isOpen === faq.id ? "rotate-45 text-white" : "text-zinc-400"
+                                className={`text-xl transition-transform duration-300 ${isOpen === faq.id ? "rotate-45 text-fg" : "text-muted"
                                     }`}
                             >
                                 +
@@ -49,7 +49,7 @@ export default function FAQ() {
                             role="region"
                             aria-labelledby={`faq-question-${faq.id}`}
                         >
-                            <p className="text-zinc-400 leading-relaxed">
+                            <p className="text-muted leading-relaxed">
                                 {faq.answer}
                             </p>
                         </div>

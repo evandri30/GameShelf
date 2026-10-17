@@ -5,7 +5,18 @@ import { cache } from 'react'
 export async function getUserShelf(userId: string) {
     return await prisma.shelf.findMany({
         where: { userId },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
+        // only what the shelf grid renders
+        select: {
+            id: true,
+            title: true,
+            slug: true,
+            status: true,
+            backgroundImage: true,
+            rating: true,
+            caption: true,
+            playtime: true
+        }
     })
 }
 
@@ -53,7 +64,8 @@ export async function deleteUserShelf(id: string, userId: string) {
     })
 }
 
-export async function getDashboardData(userId: string) {
+// cache(): generateMetadata and the page both ask for the same data in one request
+export const getDashboardData = cache(async (userId: string) => {
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, image: true, id: true }
@@ -107,4 +119,4 @@ export async function getDashboardData(userId: string) {
         totalGames,
         topGames
     }
-}
+})

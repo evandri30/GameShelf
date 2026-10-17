@@ -1,108 +1,36 @@
-'use client';
-
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { CircleUserRound } from "lucide-react";
-import { toast } from "react-toastify";
-import { useState, useRef, useEffect } from "react";
+import { Suspense } from "react";
+import { getSession } from "@/auth";
+import { buttonClass } from "./ui/Button";
+import { Skeleton } from "./ui/Card";
+import UserMenu from "./UserMenu";
+
+// Session is read on the server, so there is no client session fetch and no "Loading..." flash
+async function NavUser() {
+    const session = await getSession();
+
+    if (!session?.user) {
+        return (
+            <Link href="/auth" className={buttonClass("primary", "sm")}>
+                Get Started
+            </Link>
+        );
+    }
+
+    return <UserMenu name={session.user.name ?? session.user.email ?? "Player"} />;
+}
 
 export default function Navbar() {
-    const { data: session, status } = useSession();
-    const [isOpen, setIsOpen] = useState(false)
-
-    const ref = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        const handler = (e: MouseEvent | TouchEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                setIsOpen(false)
-            }
-        }
-
-        document.addEventListener("mousedown", handler)
-        document.addEventListener("touchstart", handler)
-
-        return () => {
-            document.removeEventListener("mousedown", handler)
-            document.removeEventListener("touchstart", handler)
-        }
-    }, [])
-
     return (
-        <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur
-                    border-b border-zinc-800 bg-black/60">
-            <div className="mx-auto max-w-7xl px-6 py-4
-                      flex items-center justify-between">
-
-                {/* Logo */}
-                <Link
-                    href="/"
-                    className="text-xl font-semibold tracking-tight
-                     hover:opacity-80 transition"
-                >
-                    GameShelf
+        <nav className="fixed inset-x-0 top-0 z-50 border-b border-line bg-base/75 backdrop-blur-md">
+            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+                <Link href="/" className="font-display text-xl font-bold uppercase tracking-wider transition-opacity hover:opacity-80">
+                    Game<span className="text-accent">Shelf</span>
                 </Link>
 
-                {/* Right side */}
-                <div className="flex items-center">
-                    {
-                        status === "loading" ?
-                            (<p className="text-sm text-zinc-400">Loading...</p>) :
-                            (session ? (
-                                <div className="relative" ref={ref}>
-                                    {/* Icon */}
-                                    <CircleUserRound
-                                        className="w-8 h-8 text-white cursor-pointer"
-                                        onClick={() => setIsOpen(!isOpen)}
-                                    />
-
-                                    {/* Dropdown */}
-                                    <div className={`absolute right-0 mt-2 w-40 
-                  bg-zinc-900 border border-zinc-800 
-                  rounded-lg shadow-lg 
-                  ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"} 
-                  transition-all duration-200`}>
-
-                                        <Link
-                                            href="/dashboard"
-                                            className="block px-4 py-2 text-sm text-white hover:bg-zinc-800 rounded-t-lg transition"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            Dashboard
-                                        </Link>
-                                        <Link
-                                            href="/shelf"
-                                            className="block px-4 py-2 text-sm text-white hover:bg-zinc-800 transition"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            Shelf
-                                        </Link>
-
-                                        <button
-                                            onClick={() => {
-                                                signOut({ callbackUrl: "/" });
-                                                toast.success("Logged out successfully");
-                                                setIsOpen(false)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-zinc-800 rounded-b-lg transition"
-                                        >
-                                            Logout
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <Link
-                                    href="/auth"
-                                    className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium
-                            hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(255,255,255,0.25)]
-                            transition"
-                                >
-                                    Get Started
-                                </Link>
-                            )
-                            )
-                    }
-                </div>
+                <Suspense fallback={<Skeleton className="h-9 w-9 rounded-full" />}>
+                    <NavUser />
+                </Suspense>
             </div>
         </nav>
     );

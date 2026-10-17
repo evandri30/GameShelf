@@ -1,10 +1,10 @@
 export default function PageHeader() {
     return (
-        <section className="max-w-3xl flex flex-col items-center gap-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <section className="flex max-w-3xl flex-col items-center gap-4">
+            <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">
                 Shelf
             </h1>
-            <p className="text-zinc-400 max-w-xl">
+            <p className="max-w-xl text-muted">
                 Track your journey. Manage what you play. Remember what you finished.
             </p>
         </section>

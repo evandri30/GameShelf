@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Gamepad2, Eye, EyeOff } from 'lucide-react'
-import { FadeIn } from '@/components/AnimatedSection'
 import { toast } from 'react-toastify'
 import { LoginSchema, RegisterSchema } from "@/schemas/auth.schema"
 
@@ -116,22 +115,20 @@ export default function AuthPage() {
     }, [isLogin])
 
     return (
-        <FadeIn>
-            <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-6 py-16">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
+            <div className="relative flex min-h-screen animate-fade-up items-center justify-center px-6 py-16">
                 <div className="w-full max-w-md">
                     <div className="flex justify-center mb-8">
-                        <span className="flex justify-center items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-400">
+                        <span className="flex justify-center items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-xs text-muted">
                             <Gamepad2 className="w-4 h-4" />
                             {isLogin ? 'Welcome back' : 'Join GameShelf'}
                         </span>
                     </div>
 
-                    <div className="relative border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm rounded-xl p-8 shadow-2xl">
-                        <h2 className="text-3xl font-bold mb-2 text-center text-white tracking-tight">
+                    <div className="relative border border-line bg-surface backdrop-blur-sm rounded-xl p-8 shadow-2xl">
+                        <h2 className="text-3xl font-bold mb-2 text-center text-fg tracking-tight">
                             {isLogin ? 'Login' : 'Create Account'}
                         </h2>
-                        <p className="text-center text-zinc-400 text-sm mb-6">
+                        <p className="text-center text-muted text-sm mb-6">
                             {isLogin ? 'Access your game collection' : 'Start organizing your games'}
                         </p>
 
@@ -139,7 +136,7 @@ export default function AuthPage() {
                             {/* Name field */}
                             {!isLogin && (
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 text-zinc-300">
+                                    <label className="block text-sm font-medium mb-2 text-fg/85">
                                         Name
                                     </label>
                                     <input
@@ -151,9 +148,9 @@ export default function AuthPage() {
                                             setErrors(prev => ({ ...prev, name: '' }))
                                         }}
                                         className={`w-full px-4 py-3 border rounded-lg 
-                                             bg-zinc-800/50 text-white placeholder:text-zinc-500
-                                             focus:outline-none focus:ring-2 focus:ring-white/20 
-                                             transition ${errors.name ? 'border-red-500' : 'border-zinc-700'}`}
+                                             bg-surface-2 text-fg placeholder:text-subtle
+                                             focus:outline-none focus:ring-2 focus:border-accent 
+                                             transition ${errors.name ? 'border-red-500' : 'border-line-strong'}`}
                                         placeholder="Your name"
                                     />
                                     {errors.name && (
@@ -164,7 +161,7 @@ export default function AuthPage() {
 
                             {/* Email field */}
                             <div>
-                                <label className="block text-sm font-medium mb-2 text-zinc-300">
+                                <label className="block text-sm font-medium mb-2 text-fg/85">
                                     Email
                                 </label>
                                 <input
@@ -176,9 +173,9 @@ export default function AuthPage() {
                                         setErrors(prev => ({ ...prev, email: '' }))
                                     }}
                                     className={`w-full px-4 py-3 border rounded-lg 
-                                         bg-zinc-800/50 text-white placeholder:text-zinc-500
-                                         focus:outline-none focus:ring-2 focus:ring-white/20 
-                                         transition ${errors.email ? 'border-red-500' : 'border-zinc-700'}`}
+                                         bg-surface-2 text-fg placeholder:text-subtle
+                                         focus:outline-none focus:ring-2 focus:border-accent 
+                                         transition ${errors.email ? 'border-red-500' : 'border-line-strong'}`}
                                     placeholder="you@example.com"
                                 />
                                 {errors.email && (
@@ -188,7 +185,7 @@ export default function AuthPage() {
 
                             {/* Password field */}
                             <div>
-                                <label className="block text-sm font-medium mb-2 text-zinc-300">
+                                <label className="block text-sm font-medium mb-2 text-fg/85">
                                     Password
                                 </label>
                                 <div className="relative">
@@ -200,16 +197,16 @@ export default function AuthPage() {
                                             setErrors(prev => ({ ...prev, password: '' }))
                                         }}
                                         className={`w-full px-4 py-3 pr-12 border rounded-lg 
-                                             bg-zinc-800/50 text-white placeholder:text-zinc-500
-                                             focus:outline-none focus:ring-2 focus:ring-white/20 
-                                             transition ${errors.password ? 'border-red-500' : 'border-zinc-700'}`}
+                                             bg-surface-2 text-fg placeholder:text-subtle
+                                             focus:outline-none focus:ring-2 focus:border-accent 
+                                             transition ${errors.password ? 'border-red-500' : 'border-line-strong'}`}
                                         placeholder="••••••••"
                                     />
                                     <div className="absolute inset-y-0 right-3 flex items-center">
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="text-zinc-400 hover:text-white transition"
+                                            className="text-muted hover:text-fg transition"
                                         >
                                             {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                                         </button>
@@ -223,9 +220,9 @@ export default function AuthPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full mt-6 px-7 py-3 rounded-lg bg-white text-black font-medium
+                                className="w-full mt-6 px-7 py-3 rounded-lg bg-accent text-accent-fg font-medium
                                      hover:-translate-y-0.5 
-                                     hover:shadow-[0_15px_35px_rgba(255,255,255,0.25)]
+                                     hover:shadow-glow
                                      disabled:opacity-50 disabled:cursor-not-allowed 
                                      disabled:hover:translate-y-0 disabled:hover:shadow-none
                                      transition-all"
@@ -235,14 +232,14 @@ export default function AuthPage() {
                         </form>
 
                         <div className="mt-6 text-center">
-                            <p className="text-sm text-zinc-400">
+                            <p className="text-sm text-muted">
                                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                                 <button
                                     onClick={() => {
                                         setIsLogin(!isLogin)
                                         setErrors({})
                                     }}
-                                    className="text-white hover:underline font-medium transition"
+                                    className="text-fg hover:underline font-medium transition"
                                     disabled={loading}
                                 >
                                     {isLogin ? 'Sign up' : 'Log in'}
@@ -251,11 +248,10 @@ export default function AuthPage() {
                         </div>
                     </div>
 
-                    <p className="mt-6 text-center text-sm text-zinc-500">
+                    <p className="mt-6 text-center text-sm text-subtle">
                         No ads. No clutter. Just your games.
                     </p>
                 </div>
-            </main>
-        </FadeIn>
+            </div>
     )
 }

@@ -1,68 +1,53 @@
 import Image from 'next/image';
+import { Star } from 'lucide-react';
 import AddToShelfButton from './AddToShelfButton';
 import type { GameDetailProps } from "@/types"
 import { getCroppedImageUrl } from '@/utils/image';
+import { Badge, MetacriticBadge } from '@/components/ui/Badge';
 
 type Props = {
     game: GameDetailProps;
     slug: string;
 }
 
-
 export default function PageHeaderDetail({ game, slug }: Props) {
     return (
         <section className='w-full max-w-6xl'>
-            <div className='relative w-full h-100 rounded-xl overflow-hidden border border-zinc-800'>
+            <div className='relative h-100 w-full overflow-hidden rounded-lg border border-line'>
                 {game.background_image ? (
                     <Image
-                        src={getCroppedImageUrl(game.background_image, 1200, 720)}
+                        src={getCroppedImageUrl(game.background_image, 1280)}
                         alt={game.name}
-                        loading="lazy"
-                        priority={false}
                         fill
-                        sizes='100vw'
+                        // hero image is the LCP element of this page
+                        preload
+                        sizes='(max-width: 1152px) 100vw, 1152px'
                         className="object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-500">
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">
                         No Image Available
                     </div>
                 )}
-                <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-base via-base/60 to-transparent" />
 
                 {/* Title Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.8)] mb-4">
+                    <h1 className="mb-4 font-display text-4xl font-bold tracking-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.8)] md:text-6xl">
                         {game.name}
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
-                        {game.metacritic && (
-                            <span className={`text-sm font-bold px-3 py-1 rounded-md border
-                                                ${game.metacritic >= 75
-                                    ? "border-green-500 text-green-400 bg-green-950/50"
-                                    : game.metacritic >= 50
-                                        ? "border-yellow-500 text-yellow-400 bg-yellow-950/50"
-                                        : "border-red-500 text-red-400 bg-red-950/50"
-                                }`}>
-                                Metacritic: {game.metacritic}
-                            </span>
-                        )}
-                        {game.esrb_rating && (
-                            <span className="text-sm px-3 py-1 rounded-md bg-zinc-900/80 border border-zinc-700 text-zinc-300">
-                                {game.esrb_rating.name}
-                            </span>
-                        )}
-                        <span className="text-sm px-3 py-1 rounded-md bg-zinc-900/80 border border-zinc-700 text-zinc-300">
-                            ⭐ {game.rating.toFixed(1)} / {game.rating_top}
-                        </span>
-                        <div>
-                            <AddToShelfButton
-                                rawgId={game.id}
-                                title={game.name}
-                                slug={slug}
-                                backgroundImage={game.background_image}
-                            />
-                        </div>
+                        {game.metacritic && <MetacriticBadge score={game.metacritic} label />}
+                        {game.esrb_rating && <Badge>{game.esrb_rating.name}</Badge>}
+                        <Badge className="border-line-strong bg-base/70 font-mono text-fg">
+                            <Star className="h-3.5 w-3.5 fill-accent text-accent" aria-hidden /> {game.rating.toFixed(1)} / {game.rating_top}
+                        </Badge>
+                        <AddToShelfButton
+                            rawgId={game.id}
+                            title={game.name}
+                            slug={slug}
+                            backgroundImage={game.background_image}
+                        />
                     </div>
                 </div>
             </div>

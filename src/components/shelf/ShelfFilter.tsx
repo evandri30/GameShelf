@@ -23,9 +23,10 @@ export default function ShelfFilter({ shelf }: Props) {
                     <button
                         key={filter.value}
                         onClick={() => setActiveFilter(filter.value)}
-                        className={`px-5 py-2 rounded-full border transition-all ${activeFilter === filter.value
-                            ? "bg-white text-black border-white font-semibold"
-                            : "bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white"
+                        aria-pressed={activeFilter === filter.value}
+                        className={`cursor-pointer rounded-md border px-4 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${activeFilter === filter.value
+                            ? "border-accent bg-accent text-accent-fg"
+                            : "border-line-strong text-muted hover:border-muted hover:text-fg"
                             }`}
                     >
                         {filter.label}
@@ -34,8 +35,8 @@ export default function ShelfFilter({ shelf }: Props) {
             </div>
 
             {/* Games Count */}
-            <div className="mt-6 text-zinc-600 text-sm">
-                Showing {filteredShelf.length} {filteredShelf.length > 1 ? 'games' : 'game'}
+            <div className="mt-6 font-mono text-sm text-subtle">
+                Showing {filteredShelf.length} {filteredShelf.length === 1 ? 'game' : 'games'}
             </div>
 
             {/* Grind Game */}

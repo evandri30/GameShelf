@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
-import type { GameProps } from "@/types"
+import type { GotyGame } from "@/constants/gotywinner"
+import { getCroppedImageUrl } from "@/utils/image"
 
 type GOTYSliderProps = {
-    games: GameProps[];
+    games: GotyGame[];
     currentIndex: number;
     onSelectGame: (index: number) => void
 }
@@ -19,20 +20,23 @@ export default function GOTYSelect({ games, currentIndex, onSelectGame }: GOTYSl
                 <button
                     key={game.id}
                     onClick={() => onSelectGame(index)}
-                    className={`relative shrink-0 w-32 h-20 rounded-lg overflow-hidden border-2 transition ${index === currentIndex
-                        ? "border-white"
-                        : "border-zinc-700 hover:border-zinc-500 opacity-60 hover:opacity-100"}`}
+                    aria-label={`Show ${game.name}`}
+                    aria-current={index === currentIndex}
+                    className={`relative h-20 w-32 shrink-0 cursor-pointer overflow-hidden rounded-md border-2 transition ${index === currentIndex
+                        ? "border-accent"
+                        : "border-line opacity-60 hover:border-line-strong hover:opacity-100"}`}
                 >
                     {game.background_image ? (
                         <Image
-                            src={game.background_image}
-                            alt={game.name}
+                            src={getCroppedImageUrl(game.background_image, 420)}
+                            alt=""
                             fill
+                            sizes="128px"
                             className="object-cover"
                             loading="lazy"
                         />
                     ) : (
-                        <div className="w-full h-full bg-zinc-800" />
+                        <div className="w-full h-full bg-surface-2" />
                     )}
                     <div className="absolute inset-0 bg-black/20" />
                 </button>

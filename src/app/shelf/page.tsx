@@ -1,12 +1,11 @@
-import { auth } from '@/auth'
-import { FadeIn } from '@/components/AnimatedSection'
+import { getSession } from '@/auth'
 import { getUserShelf } from '@/services/shelf.service'
 import PageHeader from '@/components/shelf/PageHeader'
 import ShelfFilter from '@/components/shelf/ShelfFilter'
 import { redirect } from 'next/navigation'
 
 export default async function ShelfPage() {
-    const session = await auth()
+    const session = await getSession()
 
     if (!session?.user?.id) {
         redirect('/auth')
@@ -15,16 +14,12 @@ export default async function ShelfPage() {
     const shelf = await getUserShelf(session.user.id)
 
     return (
-        <FadeIn>
-            <main className="relative min-h-screen overflow-hidden px-6 py-16 flex flex-col items-center text-center">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
+        <div className="relative flex min-h-screen animate-fade-up flex-col items-center px-6 py-16 text-center">
+            {/* Header */}
+            <PageHeader />
 
-                {/* Header */}
-                <PageHeader />
-
-                {/* Shelf Card */}
-                <ShelfFilter shelf={shelf} />
-            </main>
-        </FadeIn>
+            {/* Shelf Card */}
+            <ShelfFilter shelf={shelf} />
+        </div>
     )
 }

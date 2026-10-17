@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, X } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 
 type SearchBarProps = {
@@ -11,7 +11,6 @@ type SearchBarProps = {
 
 export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
     const router = useRouter()
-    const searchParams = useSearchParams()
 
     const [inputValue, setInputValue] = useState(searchQuery || '')
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -27,18 +26,8 @@ export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
 
     const updateSearch = (value: string) => {
         lastPushedQuery.current = value
-        const current = new URLSearchParams(Array.from(searchParams.entries()))
-        if (value) {
-            current.set('search', value)
-        } else {
-            current.delete('search')
-        }
-        // Always reset to page 1 when searching
-        current.delete('page')
-
-        const search = current.toString()
-        const query = search ? `?${search}` : ''
-        router.push(`/games${query}`)
+        // A new search always starts from page 1, so the only param kept is the query itself
+        router.push(value ? `/games?${new URLSearchParams({ search: value })}` : '/games')
     }
 
     const handleSearchChange = (value: string) => {
@@ -75,15 +64,16 @@ export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
                     value={inputValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="search games...."
-                    className="w-full px-4 py-3 pl-12 rounded-xl border border-zinc-800 bg-zinc-900/50 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-600 transition"
+                    aria-label="Search games"
+                    className="w-full rounded-md border border-line bg-surface px-4 py-3 pl-12 text-fg transition-colors placeholder:text-subtle focus:border-accent focus:outline-none"
                 />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-subtle" />
 
                 {inputValue && (
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition"
+                        className="absolute right-3 top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 rounded bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:text-fg"
                     >
                         <X className="w-3 h-3" />
                         clear
@@ -92,7 +82,7 @@ export default function SearchBar({ searchQuery, totalGames }: SearchBarProps) {
             </form>
 
             {searchQuery && (
-                <p className='mt-4 text-sm text-zinc-500'>Found {totalGames.toLocaleString()} result(s) for &quot;{searchQuery}&quot;</p>
+                <p className='mt-4 text-sm text-muted'>Found {totalGames.toLocaleString()} result(s) for &quot;{searchQuery}&quot;</p>
             )}
         </section>
     )

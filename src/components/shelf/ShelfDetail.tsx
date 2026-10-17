@@ -1,270 +1,181 @@
 "use client"
 
-import { useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { toast } from "react-toastify"
-import { getStatusStyle } from "@/utils/statusStyle"
-import type { ShelfFDetailProps } from "@/types"
+import type { ShelfFDetailProps, UpdateShelfInput } from "@/types"
+import { SHELF_STATUSES, STATUS_META, isShelfStatus } from "@/constants/status"
 import { getCroppedImageUrl } from "@/utils/image"
+import { updateShelf } from "@/app/shelf/actions"
+import { StatusBadge } from "@/components/ui/Badge"
+import Button from "@/components/ui/Button"
+import { Card } from "@/components/ui/Card"
+import StarRating from "@/components/ui/StarRating"
 
 type Props = {
     shelf: ShelfFDetailProps
 }
 
-export default function ShelfDetail({ shelf }: Props) {
-    const router = useRouter()
+const inputClass = "w-full rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-fg transition-colors focus:border-accent focus:outline-none"
 
-    const [currentStatus, setCurrentStatus] = useState(shelf.status)
+export default function ShelfDetail({ shelf }: Props) {
+    const [isPending, startTransition] = useTransition()
+
+    // status & rating update instantly and roll back on failure
+    const [optimistic, setOptimistic] = useOptimistic(
+        { status: shelf.status, rating: shelf.rating ?? 0 },
+        (state, patch: Partial<{ status: typeof shelf.status; rating: number }>) => ({ ...state, ...patch })
+    )
+
     const [caption, setCaption] = useState(shelf.caption || "")
-    const [playHour, setPlayHour] = useState<number | string>(shelf.playtime || 0)
-    const [rating, setRating] = useState(shelf.rating ?? 0)
+    const [playHour, setPlayHour] = useState<string>(String(shelf.playtime ?? 0))
     const [isEditingCaption, setIsEditingCaption] = useState(false)
     const [isEditingPlayHour, setIsEditingPlayHour] = useState(false)
-    const [loading, setLoading] = useState(false)
 
-    const handleUpdateStatus = async (value: string) => {
-        try {
-            setLoading(true)
+    // Only the changed field is sent, so a slow request can't overwrite another field with stale data
+    const save = (patch: UpdateShelfInput, successMessage: string, onSuccess?: () => void) => {
+        startTransition(async () => {
+            if (patch.status) setOptimistic({ status: patch.status })
+            if (patch.rating !== undefined) setOptimistic({ rating: patch.rating ?? 0 })
 
-            const res = await fetch(`/api/shelf/${shelf.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: value, caption: caption || null, playtime: playHour || 0, rating: rating || 0 })
-            })
+            const result = await updateShelf(shelf.id, patch)
 
-            if (!res.ok) throw new Error("Failed to update")
-
-            setCurrentStatus(value)
-            toast.success("Status updated successfully")
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to update status")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleRating = async (value: number) => {
-        try {
-            setLoading(true)
-
-            const res = await fetch(`/api/shelf/${shelf.id}`,
-                {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ rating: value, status: currentStatus, caption: caption || null, playtime: playHour || 0 })
-                }
-            )
-
-            if (!res.ok) {
-                throw new Error("Failed to update")
+            if (!result.ok) {
+                toast.error(result.error)
+                return
             }
 
-            setRating(value)
-            toast.success("Rating updated successfully")
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to updated rating")
-        } finally {
-            setLoading(false)
-        }
+            toast.success(successMessage)
+            onSuccess?.()
+        })
     }
 
-    const handleSaveCaption = async () => {
-        try {
-            setLoading(true)
-
-            const res = await fetch(`/api/shelf/${shelf.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ caption: caption || null, status: currentStatus, playtime: playHour || 0, rating: rating || 0 })
-            })
-
-            if (!res.ok) throw new Error("Failed to update")
-
-            toast.success("Caption saved successfully")
-            setIsEditingCaption(false)
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to save caption")
-        } finally {
-            setLoading(false)
-        }
+    const handleUpdateStatus = (value: string) => {
+        if (isShelfStatus(value)) save({ status: value }, "Status updated")
     }
 
-    const handleSavePlayHour = async () => {
-        try {
-            setLoading(true)
+    const handleRating = (value: number) => save({ rating: value }, value ? "Rating updated" : "Rating cleared")
 
-            const finalHours = playHour === "" ? 0 : Number(playHour)
+    const handleSaveCaption = () => save({ caption: caption.trim() || null }, "Notes saved", () => setIsEditingCaption(false))
 
-            const res = await fetch(`/api/shelf/${shelf.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ playtime: finalHours, status: currentStatus, caption: caption || null, rating: rating || 0 })
-            })
-
-            if (!res.ok) throw new Error("Failed to update")
-
-            toast.success("Play hours saved successfully")
-            setIsEditingPlayHour(false)
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to save play hours")
-        } finally {
-            setLoading(false)
+    const handleSavePlayHour = () => {
+        const hours = playHour === "" ? 0 : Number(playHour)
+        if (!Number.isInteger(hours) || hours < 0) {
+            toast.error("Play hours must be a whole number")
+            return
         }
+        save({ playtime: hours }, "Play hours saved", () => setIsEditingPlayHour(false))
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-6 py-16">
+        <div className="mx-auto max-w-5xl px-6 py-16">
             {/* Back Button */}
-            <Link
-                href="/shelf"
-                className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition mb-8"
-            >
-                <span>←</span>
-                <span>Back to Shelf</span>
+            <Link href="/shelf" className="mb-8 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Shelf
             </Link>
 
             {/* Header Section */}
-            <div className="relative w-full h-96 rounded-2xl overflow-hidden mb-8">
+            <div className="relative mb-8 h-96 w-full overflow-hidden rounded-lg border border-line">
                 {shelf.backgroundImage ? (
                     <Image
-                        src={getCroppedImageUrl(shelf.backgroundImage, 1200, 720)}
+                        src={getCroppedImageUrl(shelf.backgroundImage, 1280)}
                         alt={shelf.title}
                         fill
-                        sizes="100vw"
+                        sizes="(max-width: 1024px) 100vw, 1024px"
                         className="object-cover"
-                        priority
+                        preload
                     />
                 ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-500">
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">
                         No Image
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-base/90 via-base/30 to-transparent" />
             </div>
 
             <div className="mb-8">
-                <h1 className="text-4xl font-bold text-white mb-4">{shelf.title}</h1>
+                <h1 className="mb-4 font-display text-4xl font-bold text-fg">{shelf.title}</h1>
 
-                <div className="flex items-center gap-4 flex-wrap">
-                    <div className={`inline-block text-sm px-4 py-2 rounded-full border ${getStatusStyle(currentStatus)}`}>
-                        {currentStatus}
-                    </div>
-
-                    <div className="flex gap-1 ">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                                key={star}
-                                onClick={() => handleRating(star)}
-                                disabled={loading}
-                                className={`text-2xl transition ${star <= rating
-                                    ? "text-yellow-400"
-                                    : "text-zinc-600"
-                                    } hover:scale-110`}
-                            >
-                                ★
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex flex-wrap items-center gap-4">
+                    <StatusBadge status={optimistic.status} className="px-3 py-1 text-sm" />
+                    <StarRating value={optimistic.rating} onChange={handleRating} disabled={isPending} />
                 </div>
             </div>
 
             {/* Grid Layout */}
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid gap-6 md:grid-cols-3">
                 {/* Left Column - Status & Play Hours */}
                 <div className="space-y-6">
-                    {/* Status Selector */}
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Update Status</h3>
+                    <Card className="p-6">
+                        <label htmlFor="shelf-status" className="mb-4 block font-display text-lg font-semibold text-fg">Update Status</label>
                         <select
-                            className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-white transition"
-                            value={currentStatus}
-                            disabled={loading}
+                            id="shelf-status"
+                            className={`${inputClass} cursor-pointer`}
+                            value={optimistic.status}
+                            disabled={isPending}
                             onChange={(e) => handleUpdateStatus(e.target.value)}
                         >
-                            <option value="PLANNED">PLANNED</option>
-                            <option value="PLAYING">PLAYING</option>
-                            <option value="COMPLETED">COMPLETED</option>
-                            <option value="DROPPED">DROPPED</option>
+                            {SHELF_STATUSES.map((s) => (
+                                <option key={s} value={s}>{STATUS_META[s].label}</option>
+                            ))}
                         </select>
-                    </div>
+                    </Card>
 
-                    {/* Play Hours */}
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Play Hours</h3>
+                    <Card className="p-6">
+                        <h3 className="mb-4 font-display text-lg font-semibold text-fg">Play Hours</h3>
 
                         {isEditingPlayHour ? (
                             <div className="space-y-3">
                                 <input
                                     type="number"
                                     min="0"
-                                    value={playHour === 0 ? "" : playHour}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-
-                                        if (val === "") {
-                                            setPlayHour("")
-                                        } else {
-                                            setPlayHour(parseInt(val, 10))
-                                        }
-                                    }}
-                                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-white"
+                                    step="1"
+                                    inputMode="numeric"
+                                    value={playHour}
+                                    onChange={(e) => setPlayHour(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSavePlayHour()}
+                                    className={inputClass}
                                     placeholder="Enter hours played"
+                                    aria-label="Hours played"
+                                    autoFocus
                                 />
                                 <div className="flex gap-2">
-                                    <button
-                                        onClick={handleSavePlayHour}
-                                        disabled={loading}
-                                        className="flex-1 px-3 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition disabled:opacity-50"
-                                    >
-                                        Save
-                                    </button>
-                                    <button
+                                    <Button onClick={handleSavePlayHour} disabled={isPending} className="flex-1">Save</Button>
+                                    <Button
+                                        variant="secondary"
+                                        className="flex-1"
                                         onClick={() => {
                                             setIsEditingPlayHour(false)
-                                            setPlayHour(shelf.playtime || 0)
+                                            setPlayHour(String(shelf.playtime ?? 0))
                                         }}
-                                        className="flex-1 px-3 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition"
                                     >
                                         Cancel
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ) : (
                             <div>
-                                <p className="text-3xl font-bold text-white mb-2">
-                                    {playHour || 0} <span className="text-lg text-zinc-400">hours</span>
+                                <p className="mb-2 font-mono text-3xl font-bold text-fg">
+                                    {shelf.playtime ?? 0} <span className="font-sans text-lg text-muted">hours</span>
                                 </p>
-                                <button
-                                    onClick={() => setIsEditingPlayHour(true)}
-                                    className="text-sm text-zinc-400 hover:text-white transition"
-                                >
+                                <button onClick={() => setIsEditingPlayHour(true)} className="cursor-pointer text-sm text-muted transition-colors hover:text-accent">
                                     Edit →
                                 </button>
                             </div>
                         )}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Right Column - Caption */}
                 <div className="md:col-span-2">
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-white">My Notes</h3>
+                    <Card className="p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="font-display text-lg font-semibold text-fg">My Notes</h3>
                             {!isEditingCaption && (
-                                <button
-                                    onClick={() => setIsEditingCaption(true)}
-                                    className="text-sm text-zinc-400 hover:text-white transition"
-                                >
+                                <button onClick={() => setIsEditingCaption(true)} className="cursor-pointer text-sm text-muted transition-colors hover:text-accent">
                                     Edit →
                                 </button>
                             )}
@@ -275,40 +186,34 @@ export default function ShelfDetail({ shelf }: Props) {
                                 <textarea
                                     value={caption}
                                     onChange={(e) => setCaption(e.target.value)}
-                                    className="w-full h-40 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-white resize-none"
+                                    className={`${inputClass} h-40 resize-none`}
                                     placeholder="Write your thoughts about this game..."
+                                    aria-label="Notes"
                                     maxLength={1000}
+                                    autoFocus
                                 />
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-zinc-500">
-                                        {caption.length}/1000 characters
-                                    </span>
+                                <div className="flex items-center justify-between">
+                                    <span className="font-mono text-xs text-subtle">{caption.length}/1000</span>
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveCaption}
-                                            disabled={loading}
-                                            className="px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition disabled:opacity-50"
-                                        >
-                                            Save
-                                        </button>
-                                        <button
+                                        <Button onClick={handleSaveCaption} disabled={isPending}>Save</Button>
+                                        <Button
+                                            variant="secondary"
                                             onClick={() => {
                                                 setIsEditingCaption(false)
                                                 setCaption(shelf.caption || "")
                                             }}
-                                            className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition"
                                         >
                                             Cancel
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-zinc-300 whitespace-pre-wrap">
-                                {caption || "No notes yet. Click Edit to add your thoughts about this game."}
+                            <p className="whitespace-pre-wrap text-fg/85">
+                                {shelf.caption || <span className="text-muted">No notes yet. Click Edit to add your thoughts about this game.</span>}
                             </p>
                         )}
-                    </div>
+                    </Card>
                 </div>
             </div>
         </div>

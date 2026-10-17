@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // "use cache" + static shells with streamed dynamic parts
+  cacheComponents: true,
+  // links prefetch one shared App Shell per route instead of a full render per link
+  partialPrefetching: true,
   images: {
     remotePatterns: [
       {

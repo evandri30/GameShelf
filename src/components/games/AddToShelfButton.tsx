@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Loader2 } from 'lucide-react'
 import { toast } from "react-toastify"
+import { addToShelf } from "@/app/shelf/actions"
+import Button from "@/components/ui/Button"
 
 type Props = {
     rawgId: number;
@@ -13,50 +15,27 @@ type Props = {
 }
 
 export default function AddToShelfButton({ rawgId, title, slug, backgroundImage }: Props) {
-    const [loading, setLoading] = useState(false)
+    const [isPending, startTransition] = useTransition()
     const router = useRouter()
 
-    const addHandler = async () => {
-        if (loading) return
+    const addHandler = () => {
+        startTransition(async () => {
+            const result = await addToShelf({ rawgId, title, slug, backgroundImage })
 
-        try {
-            setLoading(true)
-
-            const res = await fetch("/api/shelf", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ rawgId, title, slug, backgroundImage })
-            })
-
-            if (res.status === 409) {
-                toast.error("Game already in shelf")
+            if (!result.ok) {
+                toast.error(result.error)
                 return
             }
 
-            if (!res.ok) {
-                throw new Error("Failed to add game")
-            }
-
-            router.push("/shelf")
             toast.success("Game added to shelf successfully")
-        } catch (error) {
-            console.log("error : ", error)
-            toast.error("Failed to add game")
-        } finally {
-            setLoading(false)
-        }
+            router.push("/shelf")
+        })
     }
 
-
     return (
-        <button
-            onClick={addHandler}
-            disabled={loading}
-            className="flex gap-2 justify-center items-center text-sm px-3 py-1 rounded-md bg-zinc-900/80 hover:bg-zinc-600 cursor-pointer border border-zinc-700 text-zinc-300  transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            {loading ? (<Loader2 className="w-4 h-4" />) : (<Plus className="w-4 h-4" />)}
-            {loading ? "adding..." : "add to shelf"}
-        </button>
+        <Button onClick={addHandler} disabled={isPending} size="sm">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            {isPending ? "Adding..." : "Add to shelf"}
+        </Button>
     )
 }

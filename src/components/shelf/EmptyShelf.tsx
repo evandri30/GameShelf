@@ -1,9 +1,13 @@
+import Link from "next/link"
+import { buttonClass } from "@/components/ui/Button"
+
 export default function EmptyShelf() {
     return (
-        <div className="mt-20 border border-zinc-800 bg-zinc-900/50 p-10 rounded-xl">
-            <p className="text-zinc-400">
-                Your shelf is empty. Start adding games.
-            </p>
+        <div className="mt-16 flex flex-col items-center gap-4 rounded-lg border border-dashed border-line-strong bg-surface/50 px-10 py-12">
+            <p className="text-muted">Nothing here yet. Start adding games.</p>
+            <Link href="/games" className={buttonClass("secondary", "sm")}>
+                Discover games
+            </Link>
         </div>
     )
 }

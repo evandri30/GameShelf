@@ -7,7 +7,7 @@ export default function Pagination({ currentPage, totalPages, hasNext, hasPrev, 
             <section className="mt-12 flex flex-wrap justify-center items-center gap-2 sm:gap-4">
                 <Link
                     href={`/games?page=${currentPage - 1}${searchQuery ? `&search=${searchQuery}` : ``}`}
-                    className={`px-4 py-2 rounded-lg border transition ${hasPrev ? "border-zinc-700 text-white hover:border-zinc-500" : "border-zinc-800 text-zinc-600 cursor-not-allowed pointer-events-none"}`}
+                    className={`px-4 py-2 rounded-lg border transition ${hasPrev ? "border-line-strong text-fg hover:border-muted" : "border-line text-subtle cursor-not-allowed pointer-events-none"}`}
                 >
                     prev
                 </Link>
@@ -18,12 +18,12 @@ export default function Pagination({ currentPage, totalPages, hasNext, hasPrev, 
                         <>
                             <Link
                                 href={`/games?page=1${searchQuery ? `&search=${searchQuery}` : ``}`}
-                                className="px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition"
+                                className="px-3 py-2 rounded-lg border border-line-strong text-fg/85 hover:border-muted transition"
                             >
                                 1
                             </Link>
                             {currentPage > 4 && (
-                                <span className="text-zinc-500">...</span>
+                                <span className="text-subtle">...</span>
                             )}
                         </>
                     )}
@@ -37,8 +37,8 @@ export default function Pagination({ currentPage, totalPages, hasNext, hasPrev, 
                                 key={page}
                                 href={`/games?page=${page}${searchQuery ? `&search=${searchQuery}` : ``}`}
                                 className={`px-3 py-2 rounded-lg border transition ${page === currentPage
-                                    ? "border-zinc-500 bg-zinc-800 text-white"
-                                    : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                                    ? "border-muted bg-surface-2 text-fg"
+                                    : "border-line-strong text-fg/85 hover:border-muted"
                                     }`}
                             >
                                 {page}
@@ -49,10 +49,10 @@ export default function Pagination({ currentPage, totalPages, hasNext, hasPrev, 
                     {/* Last Page */}
                     {currentPage < totalPages - 2 && (
                         <>
-                            {currentPage < totalPages - 3 && (<span className="text-zinc-500">...</span>)}
+                            {currentPage < totalPages - 3 && (<span className="text-subtle">...</span>)}
                             <Link
                                 href={`/games?page=${totalPages}${searchQuery ? `&search=${searchQuery}` : ``}`}
-                                className="px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:border-zinc-500 transition"
+                                className="px-3 py-2 rounded-lg border border-line-strong text-fg/85 hover:border-muted transition"
                             >
                                 {totalPages}
                             </Link>
@@ -62,13 +62,13 @@ export default function Pagination({ currentPage, totalPages, hasNext, hasPrev, 
 
                 <Link
                     href={`/games?page=${currentPage + 1}${searchQuery ? `&search=${searchQuery}` : ``}`}
-                    className={`px-4 py-2 rounded-lg border transition ${hasNext ? "border-zinc-700 text-white hover:border-zinc-500 " : "border-zinc-800 text-zinc-600 cursor-not-allowed pointer-events-none"}`}
+                    className={`px-4 py-2 rounded-lg border transition ${hasNext ? "border-line-strong text-fg hover:border-muted " : "border-line text-subtle cursor-not-allowed pointer-events-none"}`}
                 >
                     Next
                 </Link>
             </section>
 
-            <p className="mt-4 text-sm text-zinc-500">
+            <p className="mt-4 text-sm text-subtle">
                 Page {currentPage} of {totalPages.toLocaleString()}
             </p>
         </div>

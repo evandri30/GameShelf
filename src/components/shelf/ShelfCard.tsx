@@ -1,148 +1,122 @@
 "use client"
 
-import { useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
-import { getStatusStyle } from "@/utils/statusStyle"
-import Swal from "sweetalert2"
+import { Trash2 } from "lucide-react"
+import type { ShelfStatus } from "@/generated/prisma/browser"
+import { SHELF_STATUSES, STATUS_META, isShelfStatus } from "@/constants/status"
 import { getCroppedImageUrl } from "@/utils/image"
+import { removeFromShelf, updateShelf } from "@/app/shelf/actions"
+import { StatusBadge } from "@/components/ui/Badge"
+import Button from "@/components/ui/Button"
+import ConfirmDialog from "@/components/ui/ConfirmDialog"
 
 type Props = {
     id: string;
     title: string;
     slug: string;
-    status: string;
+    status: ShelfStatus;
     backgroundImage: string | null
 }
 
-const allowedStatus = ["PLANNED", "PLAYING", "COMPLETED", "DROPPED"]
-
 export default function ShelfCard({ id, title, slug, status, backgroundImage }: Props) {
-    const router = useRouter()
+    const [isPending, startTransition] = useTransition()
+    // Optimistic values show the change instantly and fall back to the server value if the action fails
+    const [optimisticStatus, setOptimisticStatus] = useOptimistic(status)
+    const [removed, setRemoved] = useOptimistic(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
 
+    const handleChange = (value: string) => {
+        if (!isShelfStatus(value)) return
 
-    const [currentStatus, setCurrentStatus] = useState(status)
-    const [loading, setLoading] = useState(false)
-    const [deleting, setDeleting] = useState(false)
+        startTransition(async () => {
+            setOptimisticStatus(value)
+            const result = await updateShelf(id, { status: value })
 
-    const handleChange = async (value: string) => {
-        try {
-            setLoading(true)
-
-            const res = await fetch(`/api/shelf/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: value })
-            })
-
-            if (!res.ok) {
-                throw new Error("Failed to update")
-            }
-
-            setCurrentStatus(value)
-            toast.success("Status update successfully")
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to update status")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleDelete = async () => {
-        const result = await Swal.fire({
-            title: 'Remove this game from your shelf?',
-            background: '#0a0a0a',
-            color: '#ffffff',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#3f3f46',
-            confirmButtonText: 'Yes, Remove',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                popup: 'border border-white/10',
-            }
+            if (result.ok) toast.success("Status updated")
+            else toast.error(result.error)
         })
-
-        if (!result.isConfirmed) return
-
-        try {
-            setDeleting(true)
-            const res = await fetch(`/api/shelf/${id}`, {
-                method: "DELETE"
-            })
-
-            if (!res.ok) {
-                throw new Error("Failed to delete")
-            }
-
-            router.refresh()
-            toast.success("Game removed from shelf successfully")
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to delete")
-        } finally {
-            setDeleting(false)
-        }
     }
 
+    const handleDelete = () => {
+        setConfirmOpen(false)
+
+        startTransition(async () => {
+            setRemoved(true)
+            const result = await removeFromShelf(id)
+
+            if (result.ok) toast.success("Game removed from shelf")
+            else toast.error(result.error)
+        })
+    }
+
+    if (removed) return null
 
     return (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden hover:border-zinc-600 transition"
-        >
+        <div className="group overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-line-strong">
             {/* Image */}
-            <Link href={`/shelf/${slug}`} className="block relative h-48 w-full">
+            <Link href={`/shelf/${slug}`} className="relative block h-48 w-full overflow-hidden">
                 {backgroundImage ? (
                     <Image
                         src={getCroppedImageUrl(backgroundImage)}
                         alt={title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="w-full h-full object-cover"
-                        loading="lazy"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-zinc-500">
+                    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-subtle">
                         No Image
                     </div>
                 )}
+                <StatusBadge status={optimisticStatus} className="absolute left-3 top-3 bg-base/80" />
             </Link>
 
             {/* Content */}
-            <div className="p-5 text-left space-y-3">
-                <h2 className="text-lg font-semibold text-white line-clamp-2 min-h-14">
-                    {title}
-                </h2>
+            <div className="space-y-3 p-4 text-left">
+                <Link href={`/shelf/${slug}`}>
+                    <h2 className="line-clamp-2 min-h-12 font-semibold text-fg transition-colors hover:text-accent">
+                        {title}
+                    </h2>
+                </Link>
 
-                {/* Badge Status */}
-                <div className={`inline-block text-xs px-3 py-1 rounded-full border ${getStatusStyle(currentStatus)}`}>
-                    {currentStatus}
+                <div className="flex gap-2">
+                    <select
+                        aria-label={`Status for ${title}`}
+                        className="h-9 min-w-0 flex-1 cursor-pointer rounded-md border border-line-strong bg-surface-2 px-2 text-sm text-fg transition-colors focus:border-accent focus:outline-none"
+                        value={optimisticStatus}
+                        disabled={isPending}
+                        onChange={(e) => handleChange(e.target.value)}
+                    >
+                        {SHELF_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                                {STATUS_META[s].label}
+                            </option>
+                        ))}
+                    </select>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        className="h-9 w-9 px-0"
+                        onClick={() => setConfirmOpen(true)}
+                        disabled={isPending}
+                        aria-label={`Remove ${title} from shelf`}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                 </div>
-
-                {/* Dropdown */}
-                <select
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-white transition"
-                    value={currentStatus}
-                    disabled={loading}
-                    onChange={(e) => handleChange(e.target.value)}
-                >
-                    {allowedStatus.map((s) => (
-                        <option key={s} value={s}>
-                            {s}
-                        </option>
-                    ))}
-                </select>
-                <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="w-full mt-2 px-3 py-2 rounded-lg border border-red-600 text-red-400 hover:bg-red-600 hover:text-white transition disabled:opacity-50"
-                >
-                    {deleting ? "Removing..." : "Remove from Shelf!"}
-                </button>
             </div>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                title="Remove this game from your shelf?"
+                description={`${title} and your notes, rating and play hours for it will be deleted.`}
+                confirmLabel="Yes, remove"
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmOpen(false)}
+            />
         </div>
     )
 }
