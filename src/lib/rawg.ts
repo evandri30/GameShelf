@@ -13,17 +13,40 @@ if (typeof window === 'undefined') {
 const BASE_URL = "https://api.rawg.io/api";
 const API_KEY = process.env.RAWG_API_KEY;
 
+export class RawgError extends Error {
+    constructor(public status: number, path: string) {
+        super(`RAWG ${status || "network error"} for ${path}`)
+        this.name = "RawgError"
+    }
+}
+
+const TIMEOUT_MS = 8000
+const RETRY_DELAYS_MS = [400, 1000]
+
+// RAWG sometimes answers 429/5xx or hangs under load, so retry those and give up on the rest
+function isRetryable(status: number) {
+    return status === 0 || status === 429 || status >= 500
+}
+
 async function rawgFetch(path: string, params: Record<string, string | number> = {}): Promise<unknown> {
     const query = new URLSearchParams({ key: API_KEY ?? "" })
     for (const [k, v] of Object.entries(params)) query.set(k, String(v))
 
-    const res = await fetch(`${BASE_URL}${path}?${query}`)
+    for (let attempt = 0; ; attempt++) {
+        let status = 0
+        try {
+            const res = await fetch(`${BASE_URL}${path}?${query}`, { signal: AbortSignal.timeout(TIMEOUT_MS) })
+            if (res.ok) return await res.json()
+            status = res.status
+        } catch {
+            // network error or timeout, status stays 0
+        }
 
-    if (!res.ok) {
-        throw new Error("Failed to fetch Game")
+        if (!isRetryable(status) || attempt >= RETRY_DELAYS_MS.length) {
+            throw new RawgError(status, path)
+        }
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]))
     }
-
-    return res.json()
 }
 
 export type GameQuery = {
@@ -70,12 +93,18 @@ export async function getParentPlatforms() {
     return data.results.map(({ id, name }) => ({ value: String(id), label: name }))
 }
 
-export async function getGameBySlug(slug: string): Promise<GameDetailProps> {
+// null when RAWG has no game with this slug; other failures throw
+export async function getGameBySlug(slug: string): Promise<GameDetailProps | null> {
     'use cache'
     cacheLife('days')
     cacheTag('rawg-games', `rawg-game-${slug}`)
 
-    const data = await rawgFetch(`/games/${encodeURIComponent(slug)}`)
+    // Errors lose their class crossing the cache boundary, so resolve the 404 in here
+    const data = await rawgFetch(`/games/${encodeURIComponent(slug)}`).catch((err) => {
+        if (err instanceof RawgError && err.status === 404) return null
+        throw err
+    })
+    if (data === null) return null
     const game = GameDetailSchema.parse(data)
 
     // description is rendered with dangerouslySetInnerHTML, so strip anything unsafe
