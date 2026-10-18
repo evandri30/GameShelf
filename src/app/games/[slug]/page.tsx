@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react'
 import { getGameBySlug } from '@/lib/rawg'
 import { getSession } from '@/auth';
@@ -24,6 +25,7 @@ export default async function DetailGamePage({ params, searchParams }: PageProps
     const { back } = await searchParams;
 
     const [game, session] = await Promise.all([getGameBySlug(slug), getSession()]);
+    if (!game) notFound()
     const shelfIndex = session?.user?.id ? await getUserShelfIndex(session.user.id) : {}
     const entry = shelfIndex[game.id]
 
