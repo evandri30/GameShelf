@@ -20,8 +20,8 @@ export class RawgError extends Error {
     }
 }
 
-const TIMEOUT_MS = 8000
-const RETRY_DELAYS_MS = [400, 1000]
+const TIMEOUT_MS = 5000
+const RETRY_DELAYS_MS = [300, 800]
 
 // RAWG sometimes answers 429/5xx or hangs under load, so retry those and give up on the rest
 function isRetryable(status: number) {

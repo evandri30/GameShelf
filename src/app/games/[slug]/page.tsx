@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react'
 import { getGameBySlug } from '@/lib/rawg'
 import { getSession } from '@/auth';
-import { getUserShelfIndex } from '@/services/shelf.service';
+import { getUserShelfIndex, type ShelfIndex } from '@/services/shelf.service';
 import Backdrop from '@/components/Backdrop';
 import GameHeaderDetail from '@/components/games/GameHeaderDetail';
 import GameContentDetail from '@/components/games/GameContentDetail';
@@ -24,9 +24,11 @@ export default async function DetailGamePage({ params, searchParams }: PageProps
     const { slug } = await params;
     const { back } = await searchParams;
 
-    const [game, session] = await Promise.all([getGameBySlug(slug), getSession()]);
+    const [game, shelfIndex] = await Promise.all([
+        getGameBySlug(slug),
+        getSession().then((session): Promise<ShelfIndex> | ShelfIndex => session?.user?.id ? getUserShelfIndex(session.user.id) : {}),
+    ]);
     if (!game) notFound()
-    const shelfIndex = session?.user?.id ? await getUserShelfIndex(session.user.id) : {}
     const entry = shelfIndex[game.id]
 
     const backHref = safeBackHref(back)
