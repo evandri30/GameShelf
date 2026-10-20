@@ -15,7 +15,29 @@ export async function getUserShelf(userId: string) {
             backgroundImage: true,
             rating: true,
             caption: true,
-            playtime: true
+            playtime: true,
+            updatedAt: true
+        }
+    })
+}
+
+// Everything the user wrote about their games, for the CSV/JSON download
+export async function getShelfExport(userId: string) {
+    return await prisma.shelf.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+        select: {
+            title: true,
+            slug: true,
+            rawgId: true,
+            status: true,
+            rating: true,
+            playtime: true,
+            caption: true,
+            startedAt: true,
+            completedAt: true,
+            createdAt: true,
+            updatedAt: true
         }
     })
 }

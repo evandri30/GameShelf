@@ -11,6 +11,7 @@ export type ShelfProps = {
     rating: number | null;
     caption: string | null;
     playtime: number | null;
+    updatedAt: Date;
 }
 
 export type ShelfFDetailProps = ShelfProps & {
@@ -18,7 +19,6 @@ export type ShelfFDetailProps = ShelfProps & {
     startedAt: Date | null;
     completedAt: Date | null;
     createdAt: Date;
-    updatedAt: Date;
 }
 
 

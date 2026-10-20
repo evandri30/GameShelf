@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Search } from "lucide-react"
 import type { ShelfStatus } from "@/generated/prisma/browser"
 import type { ShelfProps } from "@/types"
 import { SHELF_STATUSES, STATUS_META } from "@/constants/status"
+import { useSlashShortcut } from "@/hooks/useSlashShortcut"
 import EmptyShelf from "./EmptyShelf"
 import ShelfGrind from './ShelfGrind';
 
@@ -13,11 +14,13 @@ type Props = {
 }
 
 type Filter = "ALL" | ShelfStatus
-type Sort = "recent" | "rating" | "title"
+type Sort = "recent" | "updated" | "rating" | "playtime" | "title"
 
 const SORTS: { value: Sort; label: string }[] = [
     { value: "recent", label: "Recently added" },
+    { value: "updated", label: "Recently updated" },
     { value: "rating", label: "Highest rated" },
+    { value: "playtime", label: "Most played" },
     { value: "title", label: "Title A–Z" },
 ]
 
@@ -25,6 +28,8 @@ export default function ShelfFilter({ shelf }: Props) {
     const [activeFilter, setActiveFilter] = useState<Filter>("ALL")
     const [sort, setSort] = useState<Sort>("recent")
     const [query, setQuery] = useState("")
+    const searchRef = useRef<HTMLInputElement>(null)
+    useSlashShortcut(searchRef)
 
     const counts = useMemo(() => {
         const byStatus = Object.fromEntries(SHELF_STATUSES.map((s) => [s, 0])) as Record<ShelfStatus, number>
@@ -39,6 +44,8 @@ export default function ShelfFilter({ shelf }: Props) {
         )
 
         // the server already returns newest first, so "recent" keeps that order
+        if (sort === "updated") return [...filtered].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        if (sort === "playtime") return [...filtered].sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
         if (sort === "rating") return [...filtered].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
         if (sort === "title") return [...filtered].sort((a, b) => a.title.localeCompare(b.title))
         return filtered
@@ -79,13 +86,21 @@ export default function ShelfFilter({ shelf }: Props) {
                 <div className="relative flex-1">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden />
                     <input
+                        ref={searchRef}
                         type="search"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                                setQuery("")
+                                e.currentTarget.blur()
+                            }
+                        }}
                         placeholder="Search your shelf..."
                         aria-label="Search your shelf"
-                        className="h-10 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-sm text-fg placeholder:text-subtle focus:border-accent focus:outline-none"
+                        className="h-10 w-full rounded-md border border-line bg-surface pl-9 pr-10 text-sm text-fg placeholder:text-subtle focus:border-accent focus:outline-none"
                     />
+                    {!query && <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-line bg-surface-2 px-1.5 font-mono text-xs text-subtle sm:block">/</kbd>}
                 </div>
                 <label className="flex items-center gap-2 text-sm text-muted">
                     Sort

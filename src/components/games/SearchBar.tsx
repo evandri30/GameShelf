@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { discoverHref, type DiscoverQuery } from '@/constants/discover'
+import { useSlashShortcut } from '@/hooks/useSlashShortcut'
 
 type SearchBarProps = {
     searchQuery: string;
@@ -18,6 +19,8 @@ export default function SearchBar({ searchQuery, totalGames, query }: SearchBarP
     const [inputValue, setInputValue] = useState(searchQuery || '')
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
     const lastPushedQuery = useRef(searchQuery || '')
+    const inputRef = useRef<HTMLInputElement>(null)
+    useSlashShortcut(inputRef)
 
     // Sync state only if the URL changed from outside (e.g., Back/Forward navigation)
     useEffect(() => {
@@ -54,6 +57,9 @@ export default function SearchBar({ searchQuery, totalGames, query }: SearchBarP
     }
 
     const handleClear = () => {
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current)
+        }
         setInputValue('')
         updateSearch('')
     }
@@ -63,15 +69,24 @@ export default function SearchBar({ searchQuery, totalGames, query }: SearchBarP
             <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                 <form onSubmit={handleSearchSubmit} className="relative flex-1" role="search">
                     <input
+                        ref={inputRef}
                         type="search"
                         name="search"
                         value={inputValue}
                         onChange={(e) => handleSearchChange(e.target.value)}
+                        onKeyDown={(e) => {
+                            // Esc clears the search, a second Esc leaves the field
+                            if (e.key !== 'Escape') return
+                            if (inputValue) handleClear()
+                            else e.currentTarget.blur()
+                        }}
                         placeholder="Search 900k+ games..."
                         aria-label="Search games"
                         className="h-11 w-full rounded-md border border-line bg-surface px-4 pl-11 text-fg transition-colors placeholder:text-subtle focus:border-accent focus:outline-none [&::-webkit-search-cancel-button]:hidden"
                     />
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+
+                    {!inputValue && <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-line bg-surface-2 px-1.5 font-mono text-xs text-subtle sm:block">/</kbd>}
 
                     {inputValue && (
                         <button
