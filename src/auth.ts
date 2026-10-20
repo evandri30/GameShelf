@@ -1,10 +1,18 @@
 import { cache } from "react";
 import { connection } from "next/server";
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { LoginSchema } from "@/schemas/auth.schema"
+import { clientIp, rateLimit, resetRateLimit } from "@/lib/rate-limit"
+
+// signIn() on the client receives this as result.code
+class RateLimited extends CredentialsSignin {
+    code = "rate_limited"
+}
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
 
 export const { handlers, auth } = NextAuth({
     providers: [
@@ -14,18 +22,28 @@ export const { handlers, auth } = NextAuth({
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
             },
-            async authorize(credentials) {
+            async authorize(credentials, request) {
+                const result = LoginSchema.safeParse(credentials)
+
+                if (!result.success) {
+                    return null
+                }
+
+                const { password } = result.data
+                const email = result.data.email.trim().toLowerCase()
+                const emailKey = `login:email:${email}`
+
+                // slow down password guessing: 20 tries per network and 5 per account every 15 minutes
+                const [byIp, byEmail] = await Promise.all([
+                    rateLimit(`login:ip:${clientIp(request.headers)}`, 20, LOGIN_WINDOW_MS),
+                    rateLimit(emailKey, 5, LOGIN_WINDOW_MS),
+                ])
+                if (!byIp.ok || !byEmail.ok) throw new RateLimited()
+
                 try {
-                    const result = LoginSchema.safeParse(credentials)
-
-                    if (!result.success) {
-                        return null
-                    }
-
-                    const { email, password } = result.data
-
-                    const user = await prisma.user.findUnique({
-                        where: { email },
+                    // case-insensitive, so "Me@x.com" and "me@x.com" are the same account
+                    const user = await prisma.user.findFirst({
+                        where: { email: { equals: email, mode: "insensitive" } },
                     });
 
                     if (!user || !user.password) return null;
@@ -36,6 +54,9 @@ export const { handlers, auth } = NextAuth({
                     );
 
                     if (!isPasswordValid) return null;
+
+                    // a successful login clears the account's failed attempts
+                    await resetRateLimit(emailKey)
 
                     return {
                         id: user.id,
@@ -50,6 +71,9 @@ export const { handlers, auth } = NextAuth({
         }),
     ],
     session: { strategy: "jwt" },
+    // Auth.js only trusts the request host automatically on Vercel; anywhere else (next start, Docker,
+    // a VPS) every auth request fails with UntrustedHost without this or AUTH_TRUST_HOST=true
+    trustHost: true,
     pages: { signIn: "/auth" },
     callbacks: {
         async jwt({ token, user }) {

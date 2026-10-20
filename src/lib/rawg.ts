@@ -70,7 +70,11 @@ export async function listGames(query: GameQuery = {}, pageSize: number = 20): P
     if (query.ordering && GAME_ORDERINGS.some((o) => o.value === query.ordering)) params.ordering = query.ordering
     if (query.year && /^\d{4}$/.test(query.year)) params.dates = `${query.year}-01-01,${query.year}-12-31`
 
-    const data = await rawgFetch('/games', params)
+    // RAWG answers 404 for a page past the end (a hand-edited URL or a stale last-page link): show an empty page
+    const data = await rawgFetch('/games', params).catch((err) => {
+        if (err instanceof RawgError && err.status === 404) return { count: 0, next: null, previous: null, results: [] }
+        throw err
+    })
     return GameResponseSchema.parse(data)
 }
 

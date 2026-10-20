@@ -3,11 +3,24 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from "bcryptjs";
 import { RegisterSchema } from "@/schemas/auth.schema"
 import { generateUniqueUsername } from "@/services/user.service"
+import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json()
+        // at most 5 new accounts per network per hour
+        const limit = await rateLimit(`register:ip:${clientIp(req.headers)}`, 5, 60 * 60 * 1000)
+        if (!limit.ok) {
+            return NextResponse.json(
+                { error: "Too many sign-ups from this network. Try again later." },
+                { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+            )
+        }
+
+        const body = await req.json().catch(() => null)
+        if (!body) {
+            return NextResponse.json({ error: "Invalid Input" }, { status: 400 })
+        }
 
         const result = RegisterSchema.safeParse(body)
 
@@ -15,10 +28,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid Input" }, { status: 400 })
         }
 
-        const { name, email, password } = result.data
+        const { name, password } = result.data
+        // stored lowercase and compared case-insensitively, so one address can't make two accounts
+        const email = result.data.email.trim().toLowerCase()
 
-        const existingUser = await prisma.user.findUnique({
-            where: { email }
+        const existingUser = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } }
         })
 
         if (existingUser) {

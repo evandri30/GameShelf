@@ -45,7 +45,9 @@ export default function AuthForm() {
             redirect: false,
         });
 
-        if (signInResult?.error) {
+        if (signInResult?.code === 'rate_limited') {
+            toast.error("Too many login attempts. Wait 15 minutes and try again.")
+        } else if (signInResult?.error) {
             toast.error("Invalid email or password")
         } else {
             router.push('/games');
