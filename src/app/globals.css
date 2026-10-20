@@ -26,6 +26,36 @@
   --animate-fade-up: fade-up 0.35s ease-out both;
   --animate-fade-in: fade-in 0.3s ease-out both;
   --animate-progress: progress 6s linear forwards;
+  --animate-playing: progress 2.8s linear infinite;
+  --animate-star-pop: star-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  --animate-bump: bump 0.4s ease-out;
+  --animate-bar-grow: bar-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes star-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes bump {
+    40% {
+      transform: translateY(-3px) scale(1.25);
+    }
+  }
+
+  @keyframes bar-grow {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: none;
+    }
+  }
 
   @keyframes fade-up {
     from {
@@ -75,6 +105,21 @@ body {
 
 ::selection {
   background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+}
+
+/* FAQ: <details> opens and closes smoothly where the browser supports animating to auto */
+details {
+  interpolate-size: allow-keywords;
+}
+
+details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 0.25s ease, content-visibility 0.25s allow-discrete;
+}
+
+details[open]::details-content {
+  block-size: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
