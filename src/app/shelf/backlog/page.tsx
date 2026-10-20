@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react"
 import { getSession } from "@/auth"
 import { getBacklog } from "@/services/shelf.service"
 import BacklogList from "@/components/shelf/BacklogList"
+import RandomPick from "@/components/shelf/RandomPick"
 import { buttonClass } from "@/components/ui/Button"
 
 export const metadata = { title: "Up next | GameShelf" }
@@ -33,7 +34,10 @@ export default async function BacklogPage() {
                     <Link href="/games" className={buttonClass("secondary", "sm")}>Find something to play</Link>
                 </div>
             ) : (
-                <BacklogList items={backlog} />
+                <>
+                    {backlog.length > 1 && <RandomPick items={backlog} />}
+                    <BacklogList items={backlog} />
+                </>
             )}
         </div>
     )
