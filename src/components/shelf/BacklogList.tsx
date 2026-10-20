@@ -78,7 +78,7 @@ export default function BacklogList({ items: initial }: { items: Item[] }) {
                         <GripVertical className="hidden h-5 w-5 shrink-0 cursor-grab text-subtle active:cursor-grabbing sm:block" aria-hidden />
                         <span className={`w-8 shrink-0 text-center font-mono text-lg font-bold ${index === 0 ? "text-accent" : "text-subtle"}`}>{index + 1}</span>
                         <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded border border-line">
-                            {item.backgroundImage && <Image src={getCroppedImageUrl(item.backgroundImage, 200)} alt="" fill sizes="96px" className="object-cover" />}
+                            {item.backgroundImage && <Image src={getCroppedImageUrl(item.backgroundImage, 200)} alt="" fill sizes="96px" loading={index < 3 ? "eager" : undefined} className="object-cover" />}
                         </div>
                         <Link href={`/shelf/${item.slug}`} className="min-w-0 flex-1 truncate font-medium text-fg hover:text-accent">
                             {item.title}
