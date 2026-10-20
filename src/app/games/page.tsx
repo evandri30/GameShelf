@@ -1,6 +1,7 @@
+import { after } from "next/server"
 import { getGenres, getParentPlatforms, listGames } from "@/lib/rawg"
 import { getSession } from "@/auth"
-import { getUserShelfIndex } from "@/services/shelf.service"
+import { getUserShelfIndex, type ShelfIndex } from "@/services/shelf.service"
 import { gotyWinners } from "@/constants/gotywinner"
 import { FILTER_KEYS, discoverHref, type DiscoverQuery } from "@/constants/discover"
 import SearchBar from "@/components/games/SearchBar"
@@ -25,14 +26,13 @@ export default async function GamePage({ searchParams }: PageProps) {
     }
     const hasFilters = FILTER_KEYS.some((key) => query[key])
 
-    const [data, genres, platforms, session] = await Promise.all([
+    const [data, genres, platforms, shelfIndex] = await Promise.all([
         listGames(query),
         getGenres(),
         getParentPlatforms(),
-        getSession(),
+        // rawgId -> shelf entry, to badge games the user already has; runs alongside RAWG
+        getSession().then((session): Promise<ShelfIndex> | ShelfIndex => session?.user?.id ? getUserShelfIndex(session.user.id) : {}),
     ])
-    // rawgId -> shelf entry, to badge games the user already has
-    const shelfIndex = session?.user?.id ? await getUserShelfIndex(session.user.id) : {}
 
     const currentYear = new Date().getUTCFullYear()
     const years = Array.from({ length: currentYear - 1979 }, (_, i) => {
@@ -42,6 +42,13 @@ export default async function GamePage({ searchParams }: PageProps) {
 
     const showGoty = !query.search && !hasFilters && query.page === 1
     const totalPages = Math.ceil(data.count / 20);
+
+    // Warm the cache for the next pages the pagination links to, after the response is sent
+    after(() => Promise.allSettled(
+        [1, 2].map((d) => query.page! + d)
+            .filter((page) => page <= totalPages)
+            .map((page) => listGames({ ...query, page }))
+    ))
 
     const heading = query.search ? `Results for "${query.search}"` : hasFilters ? "Filtered games" : "Popular right now"
 
