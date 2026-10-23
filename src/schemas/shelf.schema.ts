@@ -1,10 +1,11 @@
 import { z } from "zod"
+import { isRawgMediaUrl } from "@/utils/image"
 
 export const CreateShelfSchema = z.object({
     rawgId: z.number().positive("Invalid Game ID"),
     title: z.string().min(1, "Title is Required").max(200, "Title too long"),
     slug: z.string().min(1, "Slug is Required"),
-    backgroundImage: z.string().nullable(),
+    backgroundImage: z.string().refine(isRawgMediaUrl, "Invalid cover image").nullable(),
     status: z.enum(["PLANNED", "PLAYING", "COMPLETED", "DROPPED"]).optional()
 })
 

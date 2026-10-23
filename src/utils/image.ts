@@ -1,6 +1,17 @@
 // Widths RAWG's /media/resize endpoint accepts; anything else redirects to the original
 const RESIZE_WIDTHS = [80, 200, 420, 640, 1280, 1920]
 
+// Only RAWG's media host may be stored or fetched server-side (the OG image renderer downloads
+// every cover), otherwise a crafted cover URL could make the server request internal hosts
+export function isRawgMediaUrl(url: string) {
+    try {
+        const { protocol, hostname, pathname } = new URL(url)
+        return protocol === "https:" && (hostname === "media.rawg.io" || hostname === "api.rawg.io") && pathname.startsWith("/media/")
+    } catch {
+        return false
+    }
+}
+
 // RAWG serves smaller variants of its media: /media/crop/600/400/... for card thumbnails and
 // /media/resize/<width>/-/... for anything else. Requesting those instead of the multi-MB
 // original makes the Next image optimizer (and the browser) download far less.

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { refresh, revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { Prisma } from '@/generated/prisma/client'
 import { createUserShelf, deleteUserShelf, editUserShelf, reorderUserBacklog } from '@/services/shelf.service'
@@ -16,12 +16,14 @@ async function requireUserId() {
     return session?.user?.id ?? null
 }
 
-// Shelf data feeds the shelf pages, Discover's "in shelf" badges, the stats and the public profile
+// Shelf data feeds the shelf pages, Discover's "in shelf" badges, the stats and the public profile.
+// /games is left out on purpose: revalidatePath also drops every 'use cache' entry rendered under it,
+// which would throw away the cached RAWG responses. Its shelf badges are uncached, so refresh() is enough.
 function revalidateShelfViews() {
     revalidatePath('/shelf', 'layout')
     revalidatePath('/dashboard', 'layout')
-    revalidatePath('/games', 'layout')
     revalidatePath('/u', 'layout')
+    refresh()
 }
 
 function isPrismaError(error: unknown, code: string) {

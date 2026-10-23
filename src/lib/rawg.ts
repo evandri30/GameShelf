@@ -20,8 +20,9 @@ export class RawgError extends Error {
     }
 }
 
-const TIMEOUT_MS = 5000
-const RETRY_DELAYS_MS = [300, 800]
+// Worst case per call is ~6.3s (2 x 3s + one backoff) instead of hanging the page for 15s+
+const TIMEOUT_MS = 3000
+const RETRY_DELAYS_MS = [300]
 
 // RAWG sometimes answers 429/5xx or hangs under load, so retry those and give up on the rest
 function isRetryable(status: number) {

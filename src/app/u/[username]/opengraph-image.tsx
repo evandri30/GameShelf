@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og"
 import { getPublicProfile } from "@/services/user.service"
-import { getCroppedImageUrl } from "@/utils/image"
+import { getCroppedImageUrl, isRawgMediaUrl } from "@/utils/image"
 
 export const alt = "GameShelf profile"
 export const size = { width: 1200, height: 630 }
@@ -29,7 +29,11 @@ export default async function Image({ params }: { params: Promise<{ username: st
     const name = profile.name || profile.username
     const completed = profile.shelves.filter((g) => g.status === "COMPLETED").length
     const hours = profile.shelves.reduce((acc, g) => acc + (g.playtime ?? 0), 0)
-    const covers = profile.shelves.map((g) => g.backgroundImage).filter(Boolean).slice(0, 4) as string[]
+    // re-checked here too: rows saved before the schema check could still hold any URL
+    const covers = profile.shelves
+        .map((g) => g.backgroundImage && getCroppedImageUrl(g.backgroundImage, 420))
+        .filter((src): src is string => !!src && isRawgMediaUrl(src))
+        .slice(0, 4)
 
     const stat = (value: number, label: string) => (
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -59,7 +63,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
                 <div style={{ display: "flex", gap: 16, marginTop: "auto", paddingTop: 24 }}>
                     {covers.map((src, i) => (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img key={i} src={getCroppedImageUrl(src, 420)} width={252} height={128} style={{ borderRadius: 10, objectFit: "cover" }} alt="" />
+                        <img key={i} src={src}width={252} height={128} style={{ borderRadius: 10, objectFit: "cover" }} alt="" />
                     ))}
                 </div>
             </div>
