@@ -25,15 +25,52 @@ export async function generateUniqueUsername(source: string) {
 export async function getProfileSettings(userId: string) {
     return prisma.user.findUnique({
         where: { id: userId },
-        select: { username: true, isPublic: true, name: true }
+        select: { username: true, isPublic: true, name: true, email: true, image: true }
     })
 }
 
-export async function updateProfileSettings(userId: string, data: { username?: string; isPublic?: boolean }) {
+// Navbar avatar and name come from the database: the JWT's copy goes stale after a profile edit
+export const getNavUser = cache(async (userId: string) => {
+    return prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true, image: true }
+    })
+})
+
+export async function updateProfileSettings(userId: string, data: { name?: string; username?: string; isPublic?: boolean }) {
     return prisma.user.update({
         where: { id: userId },
         data,
-        select: { username: true, isPublic: true }
+        select: { name: true, username: true, isPublic: true }
+    })
+}
+
+// The ?v= part changes with every upload, so the avatar URL can be cached forever
+export async function setUserAvatar(userId: string, data: Uint8Array<ArrayBuffer>, mimeType: string) {
+    return prisma.$transaction(async (tx) => {
+        const avatar = await tx.userAvatar.upsert({
+            where: { userId },
+            create: { userId, data, mimeType },
+            update: { data, mimeType },
+            select: { updatedAt: true }
+        })
+        const image = `/api/avatar/${userId}?v=${avatar.updatedAt.getTime()}`
+        await tx.user.update({ where: { id: userId }, data: { image } })
+        return image
+    })
+}
+
+export async function removeUserAvatar(userId: string) {
+    await prisma.$transaction([
+        prisma.userAvatar.deleteMany({ where: { userId } }),
+        prisma.user.update({ where: { id: userId }, data: { image: null } }),
+    ])
+}
+
+export async function getAvatar(userId: string) {
+    return prisma.userAvatar.findUnique({
+        where: { userId },
+        select: { data: true, mimeType: true, user: { select: { isPublic: true } } }
     })
 }
 

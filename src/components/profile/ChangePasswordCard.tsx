@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { KeyRound, Loader2 } from "lucide-react"
 import { toast } from "react-toastify"
-import { changePassword } from "@/app/dashboard/actions"
+import { changePassword } from "@/app/profile/actions"
 import { Card } from "@/components/ui/Card"
 import Button from "@/components/ui/Button"
 

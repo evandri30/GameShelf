@@ -15,7 +15,7 @@ export async function proxy(req: NextRequest) {
     }
 
     // signed out: private pages go to the landing page (shared stats links stay open)
-    if (!token && (pathname.startsWith("/games") || pathname.startsWith("/shelf") || (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/share")))) {
+    if (!token && (pathname.startsWith("/games") || pathname.startsWith("/shelf") || pathname.startsWith("/profile") || (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/share")))) {
         return NextResponse.redirect(new URL("/", req.url))
     }
 
@@ -23,5 +23,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/", "/games/:path*", "/shelf/:path*", "/dashboard/:path*"],
+    matcher: ["/", "/games/:path*", "/shelf/:path*", "/profile/:path*", "/dashboard/:path*"],
 };

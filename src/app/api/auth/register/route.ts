@@ -53,7 +53,7 @@ export async function POST(req: Request) {
                 email,
                 password: hashedPassword,
                 name,
-                // can be changed later from the Stats page
+                // can be changed later from the Profile page
                 username: await generateUniqueUsername(name || email)
             }
         })

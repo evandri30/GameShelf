@@ -47,7 +47,7 @@ export default function DashboardStats({ data }: { data: DashboardData }) {
                 ))}
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.6fr]">
                 <StatusBreakdown stats={data.stats} />
 
                 {/* Top games */}

@@ -22,12 +22,16 @@ export const PasswordSchema = z
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one number")
 
+// Shown on the navbar and public profile; set at sign-up, changeable on the Profile page
+export const DisplayNameSchema = z
+    .string()
+    .trim()
+    .min(1, "Name is Required")
+    .min(3, "Name must be atleast 3 characters")
+    .max(20, "Name is to long")
+
 export const RegisterSchema = z.object({
-    name: z
-        .string()
-        .min(1, "Name is Required")
-        .min(3, "Name must be atleast 3 characters")
-        .max(20, "Name is to long"),
+    name: DisplayNameSchema,
     email: z
         .email({
             error: (issue) => issue.input === "" ? "Email is required" : "Invalid email format"

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test"
 test.describe("logged out", () => {
     test.use({ storageState: { cookies: [], origins: [] } })
 
-    for (const path of ["/games", "/games/portal-2", "/shelf", "/shelf/lists", "/dashboard"]) {
+    for (const path of ["/games", "/games/portal-2", "/shelf", "/shelf/lists", "/dashboard", "/profile"]) {
         test(`${path} redirects to the landing page`, async ({ page }) => {
             await page.goto(path)
             await expect(page).toHaveURL("/")
@@ -24,7 +24,7 @@ test.describe("logged in", () => {
     })
 
     test("the private pages open", async ({ page }) => {
-        for (const path of ["/shelf", "/dashboard"]) {
+        for (const path of ["/shelf", "/dashboard", "/profile"]) {
             await page.goto(path)
             await expect(page).toHaveURL(path)
         }

@@ -24,7 +24,18 @@ model User {
   isPublic  Boolean  @default(false)
   shelves   Shelf[]
   lists     ShelfList[]
+  avatar    UserAvatar?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Uploaded profile picture, resized in the browser before upload. Kept off User so its queries
+// never pull the bytes; User.image holds the versioned /api/avatar/<userId> URL.
+model UserAvatar {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @id
+  data      Bytes
+  mimeType  String
   updatedAt DateTime @updatedAt
 }
 

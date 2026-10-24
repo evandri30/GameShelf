@@ -5,10 +5,6 @@ import { getSession } from '@/auth'
 import { getCompletionsByMonth, getDashboardData, getReviewYears } from '@/services/shelf.service'
 import DashboardStats from '@/components/dashboard/DashboardStats'
 import CompletionChart, { MONTH_LABELS } from '@/components/dashboard/CompletionChart'
-import ProfileCard from '@/components/dashboard/ProfileCard'
-import ExportCard from '@/components/dashboard/ExportCard'
-import DeleteAccountCard from '@/components/dashboard/DeleteAccountCard'
-import ChangePasswordCard from '@/components/dashboard/ChangePasswordCard'
 import { buttonClass } from '@/components/ui/Button'
 import { getTimeZone, zonedParts } from '@/lib/timezone'
 
@@ -61,14 +57,6 @@ export default async function DashboardPage() {
                     count: m.count,
                 }))}
             />
-
-            <ProfileCard username={data.user.username} isPublic={data.user.isPublic} />
-
-            <ExportCard />
-
-            <ChangePasswordCard />
-
-            <DeleteAccountCard />
         </div>
     )
 }

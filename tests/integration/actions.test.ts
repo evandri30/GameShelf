@@ -19,9 +19,18 @@ vi.mock("@/lib/rawg", () => ({ getGameBySlug }))
 const {
     addToShelf, createList, deleteList, removeFromShelf, reorderBacklog, toggleListItem, updateList, updateShelf,
 } = await import("@/app/shelf/actions")
-const { changePassword, deleteAccount, updateProfile } = await import("@/app/dashboard/actions")
+const { changePassword, deleteAccount, removeAvatar, updateProfile, uploadAvatar } = await import("@/app/profile/actions")
 
 let userId: string
+
+// just enough of a WebP header to pass the magic-byte check
+const WEBP = new Uint8Array([...new TextEncoder().encode("RIFF"), 0, 0, 0, 0, ...new TextEncoder().encode("WEBPVP8 ")])
+
+function avatarForm(bytes: Uint8Array, type = "image/webp") {
+    const form = new FormData()
+    form.append("avatar", new File([bytes as Uint8Array<ArrayBuffer>], "avatar", { type }))
+    return form
+}
 
 function logInAs(id: string | null) {
     auth.mockResolvedValue(id ? { user: { id } } : null)
@@ -50,6 +59,8 @@ describe("every action requires a session", () => {
         ["updateProfile", () => updateProfile({ isPublic: true })],
         ["deleteAccount", () => deleteAccount({ password: "Secret123" })],
         ["changePassword", () => changePassword({ currentPassword: "Secret123", newPassword: "Newpass123" })],
+        ["uploadAvatar", () => uploadAvatar(avatarForm(WEBP))],
+        ["removeAvatar", () => removeAvatar()],
     ])("%s", async (_, run) => {
         logInAs(null)
         expect(await run()).toEqual({ ok: false, error: "Please log in first" })
@@ -193,7 +204,7 @@ describe("lists", () => {
 
 describe("updateProfile", () => {
     it("saves a new username and visibility", async () => {
-        expect(await updateProfile({ username: "Evan-R", isPublic: true })).toEqual({ ok: true, data: { username: "evan-r", isPublic: true } })
+        expect(await updateProfile({ username: "Evan-R", isPublic: true })).toMatchObject({ ok: true, data: { username: "evan-r", isPublic: true } })
     })
 
     it("reports a username that is taken", async () => {
@@ -204,6 +215,46 @@ describe("updateProfile", () => {
     it("rejects an invalid username", async () => {
         const result = await updateProfile({ username: "-x" })
         expect(result.ok).toBe(false)
+    })
+
+    it("saves a trimmed nickname", async () => {
+        const result = await updateProfile({ name: "  Evan R  " })
+        expect(result).toMatchObject({ ok: true, data: { name: "Evan R" } })
+        expect((await prisma.user.findUnique({ where: { id: userId } }))?.name).toBe("Evan R")
+    })
+
+    it("rejects a nickname that is too short", async () => {
+        expect((await updateProfile({ name: "ab" })).ok).toBe(false)
+    })
+})
+
+describe("avatar", () => {
+    it("stores the photo and points User.image at it", async () => {
+        const result = await uploadAvatar(avatarForm(WEBP))
+        expect(result.ok).toBe(true)
+        const user = await prisma.user.findUnique({ where: { id: userId }, include: { avatar: true } })
+        expect(user?.image).toMatch(new RegExp(`^/api/avatar/${userId}\\?v=\\d+$`))
+        expect(result).toEqual({ ok: true, data: { image: user?.image } })
+        expect(user?.avatar?.mimeType).toBe("image/webp")
+    })
+
+    it("rejects files that aren't the image they claim to be", async () => {
+        expect((await uploadAvatar(avatarForm(new TextEncoder().encode("<svg/>"), "image/png"))).ok).toBe(false)
+        expect((await uploadAvatar(avatarForm(WEBP, "image/svg+xml"))).ok).toBe(false)
+        expect(await prisma.userAvatar.count()).toBe(0)
+    })
+
+    it("rejects oversized files", async () => {
+        const big = new Uint8Array(600 * 1024)
+        big.set(WEBP)
+        expect(await uploadAvatar(avatarForm(big))).toEqual({ ok: false, error: "That image is too large" })
+    })
+
+    it("removes the photo", async () => {
+        await uploadAvatar(avatarForm(WEBP))
+        expect(await removeAvatar()).toEqual({ ok: true })
+        expect((await prisma.user.findUnique({ where: { id: userId } }))?.image).toBeNull()
+        expect(await prisma.userAvatar.count()).toBe(0)
     })
 })
 

@@ -3,6 +3,7 @@ import Form from "next/form";
 import { Suspense } from "react";
 import { Search } from "lucide-react";
 import { getSession } from "@/auth";
+import { getNavUser } from "@/services/user.service";
 import { buttonClass } from "./ui/Button";
 import { Skeleton } from "./ui/Card";
 import UserMenu from "./UserMenu";
@@ -26,6 +27,7 @@ function NavSearch() {
 // Session is read on the server, so there is no client session fetch and no "Loading..." flash
 async function NavContent() {
     const session = await getSession();
+    const user = session?.user?.id ? await getNavUser(session.user.id) : null;
 
     if (!session?.user) {
         return (
@@ -42,7 +44,7 @@ async function NavContent() {
             <NavLinks />
             <div className="ml-auto flex items-center gap-3">
                 <NavSearch />
-                <UserMenu name={session.user.name ?? session.user.email ?? "Player"} />
+                <UserMenu name={user?.name || user?.email || session.user.email || "Player"} image={user?.image ?? null} />
             </div>
         </div>
     );

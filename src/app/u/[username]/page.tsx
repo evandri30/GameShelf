@@ -47,13 +47,13 @@ export default async function ProfilePage({ params }: Props) {
             {!profile.isPublic && (
                 <p className="flex items-center gap-2 rounded-md border border-status-planned/40 bg-status-planned/10 px-4 py-3 text-sm text-status-planned">
                     <Lock className="h-4 w-4 shrink-0" />
-                    Only you can see this page. Turn on your public profile on the <Link href="/dashboard" className="underline">Stats page</Link> to share it.
+                    Only you can see this page. Turn on your public profile on the <Link href="/profile" className="underline">Profile page</Link> to share it.
                 </p>
             )}
 
             <header className="flex items-center gap-5">
                 {profile.image ? (
-                    <Image src={profile.image} alt="" width={88} height={88} className="rounded-full border-2 border-accent object-cover" />
+                    <Image src={profile.image} alt="" width={88} height={88} unoptimized className="rounded-full border-2 border-accent object-cover" />
                 ) : (
                     <div className="flex h-22 w-22 shrink-0 items-center justify-center rounded-full border-2 border-accent bg-surface font-display text-4xl font-bold text-accent">
                         {name[0].toUpperCase()}

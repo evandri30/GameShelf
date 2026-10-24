@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { signOut } from "next-auth/react"
 import { Loader2, Trash2 } from "lucide-react"
 import { toast } from "react-toastify"
-import { deleteAccount } from "@/app/dashboard/actions"
+import { deleteAccount } from "@/app/profile/actions"
 import { Card } from "@/components/ui/Card"
 import Button from "@/components/ui/Button"
 

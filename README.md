@@ -21,11 +21,15 @@ A personal game tracker. Find games from the [RAWG](https://rawg.io) database, p
 - A stats dashboard with totals, hours played, average rating, a status breakdown, a monthly completion chart and your top games
 - **Year in Review**: what you finished in a given year, your favorites and your busiest months
 - **Public profile** at `/u/<username>`. It's private until you switch it on, and your notes are never shown. The link gets a preview image when shared on social media
-- Export your whole shelf as CSV or JSON
 
-**Accounts**
+**Profile & account**
+- A **Profile** page (`/profile`) with all your account settings in one place
+- Pick a nickname and upload a profile picture. Photos are cropped and shrunk in the browser before upload, and shown on the navbar and your public profile
+- Turn your public profile on or off, change your username and copy your share link
+- Export your whole shelf as CSV or JSON
+- Change your password, or delete your account and everything on it
 - Sign up and log in with email and password
-- Login and sign-up are rate limited to slow down password guessing and spam accounts
+- Login, sign-up, password checks and photo uploads are rate limited to slow down password guessing and spam
 
 ## Tech stack
 
@@ -125,15 +129,16 @@ npm run test:e2e
 
 ```
 prisma/
-  schema.prisma      Database models: User, Shelf, ShelfList(Item), RateLimit
+  schema.prisma      Database models: User, UserAvatar, Shelf, ShelfList(Item), RateLimit
   migrations/        Database migrations
 src/
   app/               Pages and API routes (App Router)
     games/           Discover and game detail pages
     shelf/           Your shelf, backlog and lists (+ Server Actions)
     dashboard/       Stats and Year in Review
+    profile/         Profile and account settings (+ Server Actions)
     u/[username]/    Public profiles
-    api/             Sign-up, Auth.js and shelf export endpoints
+    api/             Sign-up, Auth.js, shelf export and avatar endpoints
   auth.ts            Auth.js configuration
   proxy.ts           Redirects logged-out visitors away from private pages
   components/        UI components, grouped by feature

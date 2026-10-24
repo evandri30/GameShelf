@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import Link from "next/link"
 import { Check, Copy, ExternalLink, Globe, Loader2, Lock } from "lucide-react"
 import { toast } from "react-toastify"
-import { updateProfile } from "@/app/dashboard/actions"
+import { updateProfile } from "@/app/profile/actions"
 import { USERNAME_PATTERN } from "@/schemas/profile.schema"
 import { Card } from "@/components/ui/Card"
 import Button from "@/components/ui/Button"
@@ -76,7 +76,7 @@ export default function ProfileCard({ username: initialUsername, isPublic: initi
                 </button>
             </div>
 
-            <div className="mt-6 grid gap-4 border-t border-line pt-6 md:grid-cols-2">
+            <div className="mt-6 grid grid-cols-1 gap-4 border-t border-line pt-6 md:grid-cols-2">
                 <form
                     className="space-y-2"
                     onSubmit={(e) => {

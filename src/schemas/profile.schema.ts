@@ -1,9 +1,10 @@
 import { z } from "zod"
-import { PasswordSchema } from "@/schemas/auth.schema"
+import { DisplayNameSchema, PasswordSchema } from "@/schemas/auth.schema"
 // 3-20 chars, lowercase letters/numbers with - or _ inside
 export const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{1,18})[a-z0-9]$/
 
 export const ProfileSettingsSchema = z.object({
+    name: DisplayNameSchema.optional(),
     username: z
         .string()
         .trim()
@@ -12,6 +13,10 @@ export const ProfileSettingsSchema = z.object({
         .optional(),
     isPublic: z.boolean().optional(),
 })
+
+// The browser shrinks photos to 256px WebP first, so real uploads are far below this
+export const AVATAR_MAX_BYTES = 512 * 1024
+export const AVATAR_TYPES = ["image/webp", "image/jpeg", "image/png"] as const
 
 export const ListSchema = z.object({
     name: z.string().trim().min(1, "Give the list a name").max(60, "Name is too long"),

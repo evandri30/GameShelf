@@ -31,13 +31,17 @@ export default function CompletionChart({ title, buckets, action }: Props) {
             ) : (
                 <ol className="flex h-48 items-end gap-1.5 sm:gap-2" aria-label={`${title}: ${buckets.map((b) => `${b.label} ${b.count}`).join(", ")}`}>
                     {buckets.map((b, i) => (
-                        <li key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+                        <li key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
                             <span className={`font-mono text-[11px] ${b.count ? "text-fg" : "text-transparent"}`}>{b.count}</span>
                             <div
                                 className={`w-full rounded-t ${b.count ? "bg-accent" : "bg-surface-2"}`}
                                 style={{ height: `${b.count ? Math.max(6, (b.count / max) * 100) : 3}%` }}
                             />
-                            <span className="text-[10px] uppercase text-subtle">{b.label}</span>
+                            {/* 12 bars don't leave room for "Nov" on phones: J F M A ... */}
+                            <span className="text-[10px] uppercase text-subtle">
+                                <span className="sm:hidden">{b.label[0]}</span>
+                                <span className="hidden sm:inline">{b.label}</span>
+                            </span>
                         </li>
                     ))}
                 </ol>
