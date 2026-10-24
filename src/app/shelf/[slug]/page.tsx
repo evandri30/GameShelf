@@ -5,6 +5,7 @@ import ShelfDetail from '@/components/shelf/ShelfDetail'
 import Backdrop from '@/components/Backdrop'
 import AddToListMenu from '@/components/lists/AddToListMenu'
 import { getListMembership } from '@/services/list.service'
+import { getTimeZone } from '@/lib/timezone'
 import type { Metadata } from 'next'
 
 type Props = {
@@ -55,12 +56,12 @@ export default async function ShelfDetailPage({ params }: Props) {
         notFound()
     }
 
-    const lists = await getListMembership(session.user.id, shelf.id)
+    const [lists, timeZone] = await Promise.all([getListMembership(session.user.id, shelf.id), getTimeZone()])
 
     return (
         <div className="relative isolate -mt-16 animate-fade-up pt-16">
             <Backdrop src={shelf.backgroundImage} />
-            <ShelfDetail shelf={shelf} listsSlot={<AddToListMenu shelfId={shelf.id} lists={lists} />} />
+            <ShelfDetail shelf={shelf} timeZone={timeZone} listsSlot={<AddToListMenu shelfId={shelf.id} lists={lists} />} />
         </div>
     )
 }

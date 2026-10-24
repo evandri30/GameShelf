@@ -37,6 +37,15 @@ export async function updateProfileSettings(userId: string, data: { username?: s
     })
 }
 
+export async function changeUserPassword(userId: string, current: string, next: string): Promise<'changed' | 'wrong_password' | 'not_found'> {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } })
+    if (!user) return 'not_found'
+    if (!user.password || !(await bcrypt.compare(current, user.password))) return 'wrong_password'
+
+    await prisma.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(next, 10) } })
+    return 'changed'
+}
+
 // Shelf entries, lists and list items go with the user through onDelete: Cascade
 export async function deleteUserAccount(userId: string, password: string): Promise<'deleted' | 'wrong_password' | 'not_found'> {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } })

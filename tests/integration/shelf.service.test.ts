@@ -195,6 +195,20 @@ describe("stats", () => {
         expect(await getReviewYears(userId)).toEqual([2025, 2023])
     })
 
+    it("counts a game finished late on New Year's Eve UTC in the user's new year", async () => {
+        // 2025-12-31 18:00 UTC is 2026-01-01 01:00 in Jakarta (UTC+7)
+        await makeShelf(userId, { status: "COMPLETED", completedAt: new Date("2025-12-31T18:00:00Z") })
+
+        expect(await getReviewYears(userId)).toEqual([2025])
+        expect(await getReviewYears(userId, "Asia/Jakarta")).toEqual([2026])
+
+        const jakarta = await getYearInReview(userId, 2026, "Asia/Jakarta")
+        expect(jakarta.completed).toHaveLength(1)
+        expect(jakarta.months[0].count).toBe(1)
+        expect((await getYearInReview(userId, 2025, "Asia/Jakarta")).completed).toHaveLength(0)
+        expect((await getYearInReview(userId, 2025)).months[11].count).toBe(1)
+    })
+
     it("getCompletionsByMonth buckets the last 12 months, oldest first", async () => {
         await makeShelf(userId, { status: "COMPLETED", completedAt: new Date() })
         await makeShelf(userId, { status: "COMPLETED", completedAt: new Date() })

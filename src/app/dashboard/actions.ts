@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { Prisma } from '@/generated/prisma/client'
-import { DeleteAccountSchema, ProfileSettingsSchema } from '@/schemas/profile.schema'
-import { deleteUserAccount, updateProfileSettings } from '@/services/user.service'
+import { ChangePasswordSchema, DeleteAccountSchema, ProfileSettingsSchema } from '@/schemas/profile.schema'
+import { changeUserPassword, deleteUserAccount, updateProfileSettings } from '@/services/user.service'
 import { rateLimit, resetRateLimit } from '@/lib/rate-limit'
 import type { ActionResult } from '@/app/shelf/actions'
 
@@ -28,6 +28,32 @@ export async function updateProfile(input: { username?: string; isPublic?: boole
         console.error(error)
         return { ok: false, error: 'Failed to save' }
     }
+}
+
+export async function changePassword(input: { currentPassword: string; newPassword: string }): Promise<ActionResult> {
+    const session = await auth()
+    const userId = session?.user?.id
+    if (!userId) return { ok: false, error: 'Please log in first' }
+
+    const result = ChangePasswordSchema.safeParse(input)
+    if (!result.success) return { ok: false, error: result.error.issues[0]?.message ?? 'Invalid input' }
+
+    // same reason as deleteAccount: don't let a stolen session guess the current password
+    const limitKey = `change-password:${userId}`
+    const limit = await rateLimit(limitKey, 5, 15 * 60 * 1000)
+    if (!limit.ok) return { ok: false, error: 'Too many attempts. Try again later.' }
+
+    try {
+        const outcome = await changeUserPassword(userId, result.data.currentPassword, result.data.newPassword)
+        if (outcome === 'wrong_password') return { ok: false, error: 'Current password is wrong' }
+        if (outcome === 'not_found') return { ok: false, error: 'Account not found' }
+    } catch (error) {
+        console.error(error)
+        return { ok: false, error: 'Failed to change the password' }
+    }
+
+    await resetRateLimit(limitKey)
+    return { ok: true }
 }
 
 export async function deleteAccount(input: { password: string }): Promise<ActionResult> {

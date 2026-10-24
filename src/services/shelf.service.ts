@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { ShelfStatus } from '@/generated/prisma/browser'
 import { cache } from 'react'
+import { zonedParts, zonedStartOfMonth } from '@/lib/timezone'
 
 export async function getUserShelf(userId: string) {
     return await prisma.shelf.findMany({
@@ -167,38 +168,40 @@ export async function reorderUserBacklog(userId: string, ids: string[]) {
 
 // ---- Timeline & Year in Review ----
 
-// Completed games per month for the last `months` months (oldest first), for the Stats chart
-export async function getCompletionsByMonth(userId: string, months = 12) {
-    const now = new Date()
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
+// Completed games per month for the last `months` months (oldest first), for the Stats chart.
+// Months follow the viewer's time zone, so a game finished at 2am on the 1st counts for that month.
+export async function getCompletionsByMonth(userId: string, tz = 'UTC', months = 12) {
+    const now = zonedParts(new Date(), tz)
+    const start = zonedStartOfMonth(now.year, now.month - (months - 1), tz)
     const rows = await prisma.shelf.findMany({
         where: { userId, status: 'COMPLETED', completedAt: { gte: start } },
         select: { completedAt: true }
     })
 
     const buckets = Array.from({ length: months }, (_, i) => {
-        const d = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1))
+        const d = new Date(Date.UTC(now.year, now.month - (months - 1) + i, 1))
         return { month: d.getUTCMonth(), year: d.getUTCFullYear(), count: 0 }
     })
     for (const { completedAt } of rows) {
-        const bucket = buckets.find((b) => b.year === completedAt!.getUTCFullYear() && b.month === completedAt!.getUTCMonth())
+        const { year, month } = zonedParts(completedAt!, tz)
+        const bucket = buckets.find((b) => b.year === year && b.month === month)
         if (bucket) bucket.count++
     }
     return buckets
 }
 
 // Years that have at least one completed game, newest first (for the Year in Review switcher)
-export async function getReviewYears(userId: string) {
+export async function getReviewYears(userId: string, tz = 'UTC') {
     const rows = await prisma.shelf.findMany({
         where: { userId, status: 'COMPLETED', completedAt: { not: null } },
         select: { completedAt: true }
     })
-    return [...new Set(rows.map((r) => r.completedAt!.getUTCFullYear()))].sort((a, b) => b - a)
+    return [...new Set(rows.map((r) => zonedParts(r.completedAt!, tz).year))].sort((a, b) => b - a)
 }
 
-export async function getYearInReview(userId: string, year: number) {
-    const from = new Date(Date.UTC(year, 0, 1))
-    const to = new Date(Date.UTC(year + 1, 0, 1))
+export async function getYearInReview(userId: string, year: number, tz = 'UTC') {
+    const from = zonedStartOfMonth(year, 0, tz)
+    const to = zonedStartOfMonth(year + 1, 0, tz)
 
     const [completed, started, added] = await Promise.all([
         prisma.shelf.findMany({
@@ -212,7 +215,7 @@ export async function getYearInReview(userId: string, year: number) {
 
     const months = Array.from({ length: 12 }, (_, month) => ({
         month,
-        count: completed.filter((g) => g.completedAt!.getUTCMonth() === month).length,
+        count: completed.filter((g) => zonedParts(g.completedAt!, tz).month === month).length,
     }))
     const rated = completed.filter((g) => g.rating)
 

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { PasswordSchema } from "@/schemas/auth.schema"
 // 3-20 chars, lowercase letters/numbers with - or _ inside
 export const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{1,18})[a-z0-9]$/
 
@@ -23,3 +24,10 @@ export const BacklogOrderSchema = z.array(z.string().min(1)).max(1000)
 export const DeleteAccountSchema = z.object({
     password: z.string().min(1, "Enter your password").max(72),
 })
+
+export const ChangePasswordSchema = z
+    .object({
+        currentPassword: z.string().min(1, "Enter your current password").max(72),
+        newPassword: PasswordSchema,
+    })
+    .refine((v) => v.currentPassword !== v.newPassword, { message: "Pick a password you haven't used here", path: ["newPassword"] })

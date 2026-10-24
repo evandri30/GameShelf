@@ -15,6 +15,8 @@ import StarRating from "@/components/ui/StarRating"
 
 type Props = {
     shelf: ShelfFDetailProps
+    // the viewer's zone from the server, so server and client render the same dates
+    timeZone: string
     // server-rendered "Add to list" menu
     listsSlot?: React.ReactNode
 }
@@ -35,7 +37,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
     )
 }
 
-export default function ShelfDetail({ shelf, listsSlot }: Props) {
+export default function ShelfDetail({ shelf, timeZone, listsSlot }: Props) {
     const [isPending, startTransition] = useTransition()
 
     // status & rating update instantly and roll back on failure
@@ -126,7 +128,7 @@ export default function ShelfDetail({ shelf, listsSlot }: Props) {
     }, [])
 
     const formatDate = (date: Date | null) =>
-        date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }) : null
+        date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone }) : null
     // filled in automatically as the status changes
     const timeline = [
         { label: "Added", date: formatDate(shelf.createdAt) },

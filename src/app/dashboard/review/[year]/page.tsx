@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarCheck, Clock, Gamepad2, Play, Star, Trophy } from "l
 import { getSession } from "@/auth"
 import { getReviewYears, getYearInReview } from "@/services/shelf.service"
 import { getCroppedImageUrl } from "@/utils/image"
+import { getTimeZone } from "@/lib/timezone"
 import { Card, SectionHeading } from "@/components/ui/Card"
 import CompletionChart, { MONTH_LABELS } from "@/components/dashboard/CompletionChart"
 
@@ -23,9 +24,10 @@ export default async function YearInReviewPage({ params }: Props) {
     const session = await getSession()
     if (!session?.user?.id) redirect("/auth")
 
-    const [review, years] = await Promise.all([getYearInReview(session.user.id, year), getReviewYears(session.user.id)])
+    const tz = await getTimeZone()
+    const [review, years] = await Promise.all([getYearInReview(session.user.id, year, tz), getReviewYears(session.user.id, tz)])
 
-    const formatDate = (date: Date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+    const formatDate = (date: Date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: tz })
 
     const kpis = [
         { label: "Completed", value: review.completed.length, icon: CalendarCheck },

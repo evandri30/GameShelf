@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { makeShelf, makeUser, resetDb } from "../helpers/db"
 
-const { auth, revalidatePath, refresh } = vi.hoisted(() => ({
+const { auth, revalidatePath, refresh, getGameBySlug } = vi.hoisted(() => ({
     auth: vi.fn(),
     revalidatePath: vi.fn(),
     refresh: vi.fn(),
+    getGameBySlug: vi.fn(),
 }))
 
 // NextAuth and the router cache need a running Next server; the actions only care about their results
 vi.mock("@/auth", () => ({ auth }))
 vi.mock("next/cache", () => ({ revalidatePath, refresh }))
+// addToShelf looks the game up on RAWG; tests answer for it
+vi.mock("@/lib/rawg", () => ({ getGameBySlug }))
 
 const {
     addToShelf, createList, deleteList, removeFromShelf, reorderBacklog, toggleListItem, updateList, updateShelf,
 } = await import("@/app/shelf/actions")
-const { deleteAccount, updateProfile } = await import("@/app/dashboard/actions")
+const { changePassword, deleteAccount, updateProfile } = await import("@/app/dashboard/actions")
 
 let userId: string
 
@@ -24,10 +28,12 @@ function logInAs(id: string | null) {
 }
 
 const game = { rawgId: 4200, title: "Portal 2", slug: "portal-2", backgroundImage: null }
+const rawgPortal = { id: 4200, slug: "portal-2", name: "Portal 2", background_image: "https://media.rawg.io/media/games/portal2.jpg" }
 
 beforeEach(async () => {
     await resetDb()
     vi.clearAllMocks()
+    getGameBySlug.mockResolvedValue(rawgPortal)
     vi.spyOn(console, "error").mockImplementation(() => {})
     userId = (await makeUser({ username: "evan" })).id
     logInAs(userId)
@@ -43,6 +49,7 @@ describe("every action requires a session", () => {
         ["toggleListItem", () => toggleListItem("l", "s", true)],
         ["updateProfile", () => updateProfile({ isPublic: true })],
         ["deleteAccount", () => deleteAccount({ password: "Secret123" })],
+        ["changePassword", () => changePassword({ currentPassword: "Secret123", newPassword: "Newpass123" })],
     ])("%s", async (_, run) => {
         logInAs(null)
         expect(await run()).toEqual({ ok: false, error: "Please log in first" })
@@ -50,6 +57,31 @@ describe("every action requires a session", () => {
 })
 
 describe("addToShelf", () => {
+    it("stores RAWG's title, slug and cover, not what the client sent", async () => {
+        expect((await addToShelf({ ...game, title: "Free V-Bucks", backgroundImage: "https://media.rawg.io/media/games/fake.jpg" })).ok).toBe(true)
+
+        expect(getGameBySlug).toHaveBeenCalledWith("portal-2")
+        expect(await prisma.shelf.findFirstOrThrow({ where: { userId } })).toMatchObject({
+            title: "Portal 2", slug: "portal-2", backgroundImage: rawgPortal.background_image,
+        })
+    })
+
+    it("rejects a rawgId that doesn't match the slug's game", async () => {
+        expect(await addToShelf({ ...game, rawgId: 999 })).toEqual({ ok: false, error: "Game not found" })
+        expect(await prisma.shelf.count()).toBe(0)
+    })
+
+    it("rejects a slug RAWG doesn't know", async () => {
+        getGameBySlug.mockResolvedValue(null)
+        expect(await addToShelf(game)).toEqual({ ok: false, error: "Game not found" })
+    })
+
+    it("reports when RAWG can't be reached", async () => {
+        getGameBySlug.mockRejectedValue(new Error("timeout"))
+        expect(await addToShelf(game)).toEqual({ ok: false, error: "Couldn't reach the game database, try again" })
+        expect(await prisma.shelf.count()).toBe(0)
+    })
+
     it("adds the game for the logged-in user", async () => {
         const result = await addToShelf(game)
 
@@ -203,5 +235,39 @@ describe("deleteAccount", () => {
 
         expect(await deleteAccount({ password: "Secret123" })).toEqual({ ok: false, error: "Too many attempts. Try again later." })
         expect(await prisma.user.count({ where: { id: userId } })).toBe(1)
+    })
+})
+
+describe("changePassword", () => {
+    const input = { currentPassword: "Secret123", newPassword: "Newpass123" }
+
+    async function storedHash() {
+        return (await prisma.user.findUniqueOrThrow({ where: { id: userId } })).password!
+    }
+
+    it("saves the new password", async () => {
+        expect(await changePassword(input)).toEqual({ ok: true })
+        expect(await bcrypt.compare("Newpass123", await storedHash())).toBe(true)
+        expect(await bcrypt.compare("Secret123", await storedHash())).toBe(false)
+    })
+
+    it("keeps the old password when the current one is wrong", async () => {
+        expect(await changePassword({ ...input, currentPassword: "Wrong123" })).toEqual({ ok: false, error: "Current password is wrong" })
+        expect(await bcrypt.compare("Secret123", await storedHash())).toBe(true)
+    })
+
+    it("applies the sign-up password rules", async () => {
+        expect(await changePassword({ ...input, newPassword: "weakpass" })).toEqual({ ok: false, error: "Password must contain at least one uppercase letter" })
+    })
+
+    it("rejects reusing the current password", async () => {
+        expect(await changePassword({ ...input, newPassword: "Secret123" })).toEqual({ ok: false, error: "Pick a password you haven't used here" })
+    })
+
+    it("stops after 5 attempts in the window", async () => {
+        for (let i = 0; i < 5; i++) await changePassword({ ...input, currentPassword: "Wrong123" })
+
+        expect(await changePassword(input)).toEqual({ ok: false, error: "Too many attempts. Try again later." })
+        expect(await bcrypt.compare("Secret123", await storedHash())).toBe(true)
     })
 })

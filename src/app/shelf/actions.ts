@@ -4,6 +4,8 @@ import { refresh, revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { Prisma } from '@/generated/prisma/client'
 import { createUserShelf, deleteUserShelf, editUserShelf, reorderUserBacklog } from '@/services/shelf.service'
+import { getGameBySlug } from '@/lib/rawg'
+import { isRawgMediaUrl } from '@/utils/image'
 import { createUserList, deleteUserList, setListMembership, updateUserList } from '@/services/list.service'
 import { CreateShelfSchema, UpdateShelfSchema } from '@/schemas/shelf.schema'
 import { BacklogOrderSchema, ListSchema } from '@/schemas/profile.schema'
@@ -37,11 +39,22 @@ export async function addToShelf(input: CreateShelfInput): Promise<ActionResult<
     const result = CreateShelfSchema.safeParse(input)
     if (!result.success) return { ok: false, error: 'Invalid input' }
 
-    const { rawgId, title, slug, backgroundImage, status } = result.data
+    const { rawgId, slug, status } = result.data
+
+    // title, slug and cover are shown on public profiles, so take them from RAWG instead of the client
+    let game: Awaited<ReturnType<typeof getGameBySlug>>
+    try {
+        game = await getGameBySlug(slug)
+    } catch (error) {
+        console.error(error)
+        return { ok: false, error: "Couldn't reach the game database, try again" }
+    }
+    if (!game || game.id !== rawgId) return { ok: false, error: 'Game not found' }
+    const cover = game.background_image && isRawgMediaUrl(game.background_image) ? game.background_image : null
 
     let id: string
     try {
-        ({ id } = await createUserShelf(userId, rawgId, title, slug, backgroundImage, status))
+        ({ id } = await createUserShelf(userId, game.id, game.name, game.slug, cover, status))
     } catch (error) {
         if (isPrismaError(error, 'P2002')) return { ok: false, error: 'Game already in shelf' }
         console.error(error)

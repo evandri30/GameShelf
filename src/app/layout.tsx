@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Navbar, { MobileNavSlot } from "../components/Navbar";
 import Footer from "../components/Footer";
+import TimeZoneCookie from "../components/TimeZoneCookie";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,6 +50,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <MobileNavSlot />
+        <TimeZoneCookie />
         <ToastContainer position="top-center" autoClose={1500} theme="dark" />
       </body>
     </html>

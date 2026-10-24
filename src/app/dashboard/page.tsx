@@ -8,7 +8,9 @@ import CompletionChart, { MONTH_LABELS } from '@/components/dashboard/Completion
 import ProfileCard from '@/components/dashboard/ProfileCard'
 import ExportCard from '@/components/dashboard/ExportCard'
 import DeleteAccountCard from '@/components/dashboard/DeleteAccountCard'
+import ChangePasswordCard from '@/components/dashboard/ChangePasswordCard'
 import { buttonClass } from '@/components/ui/Button'
+import { getTimeZone, zonedParts } from '@/lib/timezone'
 
 export const metadata = { title: "Stats | GameShelf" }
 
@@ -19,10 +21,11 @@ export default async function DashboardPage() {
         redirect('/auth')
     }
 
+    const tz = await getTimeZone()
     const [data, months, reviewYears] = await Promise.all([
         getDashboardData(session.user.id),
-        getCompletionsByMonth(session.user.id),
-        getReviewYears(session.user.id),
+        getCompletionsByMonth(session.user.id, tz),
+        getReviewYears(session.user.id, tz),
     ])
 
     if (!data) {
@@ -34,7 +37,7 @@ export default async function DashboardPage() {
     }
 
     // newest year with a finished game, falling back to this year
-    const reviewYear = reviewYears[0] ?? new Date().getUTCFullYear()
+    const reviewYear = reviewYears[0] ?? zonedParts(new Date(), tz).year
 
     return (
         <div className="mx-auto flex max-w-6xl animate-fade-up flex-col gap-10 px-6 py-12">
@@ -62,6 +65,8 @@ export default async function DashboardPage() {
             <ProfileCard username={data.user.username} isPublic={data.user.isPublic} />
 
             <ExportCard />
+
+            <ChangePasswordCard />
 
             <DeleteAccountCard />
         </div>
