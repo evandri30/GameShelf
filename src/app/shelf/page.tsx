@@ -5,6 +5,8 @@ import ShelfFilter from '@/components/shelf/ShelfFilter'
 import UpNext from '@/components/shelf/UpNext'
 import { redirect } from 'next/navigation'
 
+export const metadata = { title: "My shelf | GameShelf" }
+
 export default async function ShelfPage() {
     const session = await getSession()
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@/generated/prisma/client'
 import bcrypt from "bcryptjs";
 import { RegisterSchema } from "@/schemas/auth.schema"
 import { generateUniqueUsername } from "@/services/user.service"
@@ -7,6 +8,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit"
 
 
 export async function POST(req: Request) {
+    let emailForConflict: string | null = null
     try {
         // at most 5 new accounts per network per hour
         const limit = await rateLimit(`register:ip:${clientIp(req.headers)}`, 5, 60 * 60 * 1000)
@@ -31,6 +33,7 @@ export async function POST(req: Request) {
         const { name, password } = result.data
         // stored lowercase and compared case-insensitively, so one address can't make two accounts
         const email = result.data.email.trim().toLowerCase()
+        emailForConflict = email
 
         const existingUser = await prisma.user.findFirst({
             where: { email: { equals: email, mode: "insensitive" } }
@@ -61,7 +64,14 @@ export async function POST(req: Request) {
         )
 
     } catch (error) {
-        console.log("Register Error: ", error)
+        // two sign-ups with the same email can both pass the check above; the unique index stops the second
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" &&
+            emailForConflict && await prisma.user.findUnique({ where: { email: emailForConflict }, select: { id: true } })
+        ) {
+            return NextResponse.json({ error: "Email already exist" }, { status: 400 })
+        }
+        console.error("Register Error: ", error)
         return NextResponse.json(
             { error: "Something went wrong" },
             { status: 500 }

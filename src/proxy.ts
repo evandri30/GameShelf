@@ -9,12 +9,12 @@ export async function proxy(req: NextRequest) {
     })
     const { pathname } = req.nextUrl
 
-    // Kalau sudah login
+    // signed in: skip the landing page
     if (token && pathname === "/") {
         return NextResponse.redirect(new URL("/games", req.url))
     }
 
-    // Kalau belum login
+    // signed out: private pages go to the landing page (shared stats links stay open)
     if (!token && (pathname.startsWith("/games") || pathname.startsWith("/shelf") || (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/share")))) {
         return NextResponse.redirect(new URL("/", req.url))
     }

@@ -15,7 +15,7 @@ vi.mock("next/cache", () => ({ revalidatePath, refresh }))
 const {
     addToShelf, createList, deleteList, removeFromShelf, reorderBacklog, toggleListItem, updateList, updateShelf,
 } = await import("@/app/shelf/actions")
-const { updateProfile } = await import("@/app/dashboard/actions")
+const { deleteAccount, updateProfile } = await import("@/app/dashboard/actions")
 
 let userId: string
 
@@ -42,6 +42,7 @@ describe("every action requires a session", () => {
         ["createList", () => createList({ name: "x" })],
         ["toggleListItem", () => toggleListItem("l", "s", true)],
         ["updateProfile", () => updateProfile({ isPublic: true })],
+        ["deleteAccount", () => deleteAccount({ password: "Secret123" })],
     ])("%s", async (_, run) => {
         logInAs(null)
         expect(await run()).toEqual({ ok: false, error: "Please log in first" })
@@ -171,5 +172,36 @@ describe("updateProfile", () => {
     it("rejects an invalid username", async () => {
         const result = await updateProfile({ username: "-x" })
         expect(result.ok).toBe(false)
+    })
+})
+
+describe("deleteAccount", () => {
+    it("keeps the account when the password is wrong", async () => {
+        expect(await deleteAccount({ password: "Wrong123" })).toEqual({ ok: false, error: "Wrong password" })
+        expect(await prisma.user.count({ where: { id: userId } })).toBe(1)
+    })
+
+    it("deletes the user with their shelf and lists, and nobody else's", async () => {
+        const shelf = await makeShelf(userId)
+        const list = await prisma.shelfList.create({ data: { userId, name: "Co-op" } })
+        await prisma.shelfListItem.create({ data: { listId: list.id, shelfId: shelf.id } })
+        const other = await makeUser()
+        await makeShelf(other.id)
+
+        expect(await deleteAccount({ password: "Secret123" })).toEqual({ ok: true })
+
+        expect(await prisma.user.count({ where: { id: userId } })).toBe(0)
+        expect(await prisma.shelf.count({ where: { userId } })).toBe(0)
+        expect(await prisma.shelfList.count({ where: { userId } })).toBe(0)
+        expect(await prisma.shelfListItem.count()).toBe(0)
+        expect(await prisma.shelf.count({ where: { userId: other.id } })).toBe(1)
+        expect(revalidatePath).toHaveBeenCalledWith("/u", "layout")
+    })
+
+    it("stops after 5 attempts in the window", async () => {
+        for (let i = 0; i < 5; i++) await deleteAccount({ password: "Wrong123" })
+
+        expect(await deleteAccount({ password: "Secret123" })).toEqual({ ok: false, error: "Too many attempts. Try again later." })
+        expect(await prisma.user.count({ where: { id: userId } })).toBe(1)
     })
 })

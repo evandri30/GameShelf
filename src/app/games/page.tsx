@@ -10,6 +10,8 @@ import GameGrind from "@/components/games/GameGrind"
 import Pagination from "@/components/games/Pagination"
 import GOTYSlider from "@/components/games/GOTYSlider"
 
+export const metadata = { title: "Discover | GameShelf" }
+
 type PageProps = {
     searchParams: Promise<{ page?: string; search?: string; genre?: string; platform?: string; ordering?: string; year?: string }>
 }

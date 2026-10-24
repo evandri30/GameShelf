@@ -23,6 +23,8 @@ const chakraPetch = Chakra_Petch({
 });
 
 export const metadata: Metadata = {
+  // absolute base for OG image URLs (e.g. /u/[username]/opengraph-image) when links are shared
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "GameShelf",
   description: "GameShelf helps you explore popular games, view details, and save your favorites.",
 };

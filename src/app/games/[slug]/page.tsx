@@ -1,8 +1,10 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react'
 import { getGameBySlug } from '@/lib/rawg'
+import { getCroppedImageUrl } from '@/utils/image'
 import { getSession } from '@/auth';
 import { getUserShelfIndex, type ShelfIndex } from '@/services/shelf.service';
 import Backdrop from '@/components/Backdrop';
@@ -13,6 +15,27 @@ import { Screenshots, SectionSkeleton, SeriesRail, StoreLinks } from '@/componen
 type PageProps = {
     params: Promise<{ slug: string }>
     searchParams: Promise<{ back?: string }>
+}
+
+// getGameBySlug is cached, so the page render below reuses this lookup
+export async function generateMetadata({ params }: Pick<PageProps, 'params'>): Promise<Metadata> {
+    const { slug } = await params
+    const game = await getGameBySlug(slug).catch(() => null)
+    if (!game) return { title: 'Game not found | GameShelf' }
+
+    // the description is sanitized HTML; previews want plain text
+    const text = game.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    const description = text.length > 160 ? `${text.slice(0, 157)}...` : text
+
+    return {
+        title: `${game.name} | GameShelf`,
+        description,
+        openGraph: {
+            title: game.name,
+            description,
+            images: game.background_image ? [getCroppedImageUrl(game.background_image, 1280, 720)] : [],
+        },
+    }
 }
 
 // Only accept in-app Discover URLs as the "back" target

@@ -52,6 +52,7 @@ describe("RegisterSchema", () => {
         ["secret123", "Password must contain at least one uppercase letter"],
         ["SECRET123", "Password must contain at least one lowercase letter"],
         ["SecretAbc", "Password must contain at least one number"],
+        ["Secret1" + "a".repeat(66), "Password must be at most 72 characters"],
     ])("rejects password %j", (password, message) => {
         expect(RegisterSchema.safeParse({ ...valid, password }).error?.issues.map((i) => i.message)).toContain(message)
     })

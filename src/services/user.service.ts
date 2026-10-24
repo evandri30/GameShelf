@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
 export { USERNAME_PATTERN } from '@/schemas/profile.schema'
@@ -34,6 +35,16 @@ export async function updateProfileSettings(userId: string, data: { username?: s
         data,
         select: { username: true, isPublic: true }
     })
+}
+
+// Shelf entries, lists and list items go with the user through onDelete: Cascade
+export async function deleteUserAccount(userId: string, password: string): Promise<'deleted' | 'wrong_password' | 'not_found'> {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } })
+    if (!user) return 'not_found'
+    if (!user.password || !(await bcrypt.compare(password, user.password))) return 'wrong_password'
+
+    await prisma.user.delete({ where: { id: userId } })
+    return 'deleted'
 }
 
 // Everything the public profile page needs; notes (caption) are private and never selected

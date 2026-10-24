@@ -15,9 +15,15 @@ export default function Footer() {
     return (
         <footer className="mt-24 border-t border-line">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted md:flex-row">
-                <p>
-                    © <CurrentYear /> <span className="font-display font-semibold uppercase tracking-wider text-fg">GameShelf</span>
-                </p>
+                <div className="flex flex-col items-center gap-1 md:items-start">
+                    <p>
+                        © <CurrentYear /> <span className="font-display font-semibold uppercase tracking-wider text-fg">GameShelf</span>
+                    </p>
+                    {/* RAWG's API terms require a visible link back on pages that use their data */}
+                    <p className="text-xs text-subtle">
+                        Game data by <a href="https://rawg.io" className={linkClass} target="_blank" rel="noopener noreferrer">RAWG</a>
+                    </p>
+                </div>
 
                 <div className="flex gap-5">
                     <a href="mailto:evandriridhoh@gmail.com" className={linkClass} aria-label="Email Us">

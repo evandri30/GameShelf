@@ -19,7 +19,7 @@ const valid = { name: "Evan Ridho", email: "Evan@Test.dev", password: "Secret123
 
 beforeEach(async () => {
     await resetDb()
-    vi.spyOn(console, "log").mockImplementation(() => {})
+    vi.spyOn(console, "error").mockImplementation(() => {})
 })
 
 describe("POST /api/auth/register", () => {
@@ -54,6 +54,13 @@ describe("POST /api/auth/register", () => {
 
         expect(res.status).toBe(400)
         expect(await res.json()).toEqual({ error: "Email already exist" })
+    })
+
+    it("turns two simultaneous sign-ups with one email into one account and a 400", async () => {
+        const responses = await Promise.all([register(valid), register(valid)])
+
+        expect(responses.map((r) => r.status).sort()).toEqual([201, 400])
+        expect(await prisma.user.count()).toBe(1)
     })
 
     it("gives a second user with the same name a different username", async () => {

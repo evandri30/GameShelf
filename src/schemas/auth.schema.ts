@@ -25,6 +25,8 @@ export const RegisterSchema = z.object({
         .string()
         .min(1, "Password is required")
         .min(6, "Password must be at least 6 characters")
+        // bcrypt ignores everything past 72 bytes
+        .max(72, "Password must be at most 72 characters")
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
         .regex(/[0-9]/, "Password must contain at least one number")

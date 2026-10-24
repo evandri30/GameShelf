@@ -7,7 +7,10 @@ import DashboardStats from '@/components/dashboard/DashboardStats'
 import CompletionChart, { MONTH_LABELS } from '@/components/dashboard/CompletionChart'
 import ProfileCard from '@/components/dashboard/ProfileCard'
 import ExportCard from '@/components/dashboard/ExportCard'
+import DeleteAccountCard from '@/components/dashboard/DeleteAccountCard'
 import { buttonClass } from '@/components/ui/Button'
+
+export const metadata = { title: "Stats | GameShelf" }
 
 export default async function DashboardPage() {
     const session = await getSession()
@@ -59,6 +62,8 @@ export default async function DashboardPage() {
             <ProfileCard username={data.user.username} isPublic={data.user.isPublic} />
 
             <ExportCard />
+
+            <DeleteAccountCard />
         </div>
     )
 }

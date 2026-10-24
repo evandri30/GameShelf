@@ -18,3 +18,8 @@ export const ListSchema = z.object({
 })
 
 export const BacklogOrderSchema = z.array(z.string().min(1)).max(1000)
+
+// Deleting the account asks for the password again, so a stolen session alone can't do it
+export const DeleteAccountSchema = z.object({
+    password: z.string().min(1, "Enter your password").max(72),
+})
