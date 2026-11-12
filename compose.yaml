@@ -1,0 +1,84 @@
+# Development stack: database + migrations + `next dev` with hot reload.
+#   docker compose up --build --watch
+# AUTH_SECRET and RAWG_API_KEY are read from .env; the database URL is set here.
+
+x-database-url: &database-url postgresql://postgres:postgres@db:5432/gameshelf
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gameshelf
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # reachable from the host for a database GUI; change DB_PORT if 5432 is taken
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gameshelf"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: *database-url
+    volumes:
+      - ./prisma:/app/prisma
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: dev
+    environment:
+      DATABASE_URL: *database-url
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      RAWG_API_KEY: ${RAWG_API_KEY:-}
+      NEXT_PUBLIC_SITE_URL: http://localhost:${APP_PORT:-3000}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      # migrations created in the container (`prisma migrate dev`) land in the repo
+      - ./prisma:/app/prisma
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    develop:
+      watch:
+        # copied into the container, where Next sees the change and hot-reloads
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - generated/
+        - action: sync+restart
+          path: ./next.config.ts
+          target: /app/next.config.ts
+        - action: rebuild
+          path: ./package-lock.json
+
+  # docker compose --profile test run --rm --build test
+  test:
+    profiles: [test]
+    build:
+      context: .
+      target: dev
+    command: npm test
+    environment:
+      # tests/setup/test-env.ts refuses any database whose name lacks "_test"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gameshelf_test
+      AUTH_SECRET: test-secret
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

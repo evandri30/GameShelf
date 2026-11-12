@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // only the Docker build (see Dockerfile) wants the self-contained server; `next start` keeps working elsewhere
+  output: process.env.BUILD_STANDALONE ? "standalone" : undefined,
   // "use cache" + static shells with streamed dynamic parts
   cacheComponents: true,
   // links prefetch one shared App Shell per route instead of a full render per link

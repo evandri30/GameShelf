@@ -42,7 +42,30 @@ A personal game tracker. Find games from the [RAWG](https://rawg.io) database, p
 | Validation | Zod |
 | Testing | Vitest (unit + integration), Playwright (end-to-end) |
 
-## Getting started
+## Run with Docker
+
+The quickest way to run everything: the database, the migrations and the app all start from one command. You only need [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+cp .env.example .env       # then fill in AUTH_SECRET and RAWG_API_KEY
+docker compose up --build --watch
+```
+
+Open [http://localhost:3000](http://localhost:3000). `--watch` copies your edits in `src/` into the container, so the page hot-reloads as usual. The database lives in the `pgdata` volume and survives `docker compose down`.
+
+| Command | What it does |
+| --- | --- |
+| `docker compose up --build --watch` | Start the database, apply migrations and run the dev server |
+| `docker compose down` | Stop everything (add `-v` to also delete the database) |
+| `docker compose exec app npx prisma migrate dev --name <name>` | Create and apply a new migration |
+| `docker compose --profile test run --rm --build test` | Run the unit and integration tests in a container |
+| `docker compose -f compose.prod.yaml up -d --build` | Run the production build (also needs `POSTGRES_PASSWORD`) |
+
+If port 5432 or 3000 is already in use, pick others: `DB_PORT=5433 APP_PORT=3001 docker compose up --build --watch`.
+
+The `Dockerfile` builds three images: `dev` (hot reload, tests, Prisma CLI), `migrate` (applies migrations, then exits) and `runner` (the small production image). End-to-end tests still run from the host, see [Running the tests](#running-the-tests).
+
+## Getting started without Docker
 
 ### 1. What you need
 

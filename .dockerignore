@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+# secrets come from the environment at run time, never from the image
+.env*
+# generated inside the image by `prisma generate`
+src/generated
+test-results
+playwright-report
+tests/e2e/.auth
+*.tsbuildinfo
+dump.sql
