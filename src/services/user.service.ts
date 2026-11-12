@@ -79,8 +79,15 @@ export async function changeUserPassword(userId: string, current: string, next: 
     if (!user) return 'not_found'
     if (!user.password || !(await bcrypt.compare(current, user.password))) return 'wrong_password'
 
-    await prisma.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(next, 10) } })
+    // the version bump signs out every session, so a stolen one dies with the old password
+    await prisma.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(next, 10), tokenVersion: { increment: 1 } } })
     return 'changed'
+}
+
+// False once the password changed after this session was issued, or the account is gone
+export async function isSessionCurrent(userId: string, tokenVersion: number) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { tokenVersion: true } })
+    return user?.tokenVersion === tokenVersion
 }
 
 // Shelf entries, lists and list items go with the user through onDelete: Cascade

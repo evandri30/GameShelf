@@ -83,7 +83,11 @@ export default function AuthForm() {
                 router.push('/games')
                 router.refresh()
                 toast.success("Account created")
-            };
+            } else {
+                // the account exists; only the automatic login failed (rate limit, network)
+                toast.info("Account created. Please log in.")
+                setIsLogin(true)
+            }
         } else {
             toast.error(data.error || 'Registration failed')
         }

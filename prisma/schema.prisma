@@ -22,6 +22,8 @@ model User {
   // public profile at /u/<username>; private until the owner turns it on
   username  String   @unique
   isPublic  Boolean  @default(false)
+  // goes up on every password change; sessions issued with an older value stop working
+  tokenVersion Int   @default(0)
   shelves   Shelf[]
   lists     ShelfList[]
   avatar    UserAvatar?

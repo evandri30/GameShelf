@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function proxy(req: NextRequest) {
-    const token = await getToken({
-        req,
-        secret: process.env.AUTH_SECRET
-    })
+    const secret = process.env.AUTH_SECRET
+    // On HTTPS Auth.js names the cookie "__Secure-authjs.session-token"; getToken only looks for
+    // the plain name unless told otherwise, so check both
+    const token = (await getToken({ req, secret, secureCookie: true })) ?? (await getToken({ req, secret }))
     const { pathname } = req.nextUrl
 
     // signed in: skip the landing page

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { signOut } from "next-auth/react"
 import { KeyRound, Loader2 } from "lucide-react"
 import { toast } from "react-toastify"
 import { changePassword } from "@/app/profile/actions"
@@ -33,7 +34,9 @@ export default function ChangePasswordCard() {
                 return
             }
             setForm(EMPTY)
-            toast.success("Password changed")
+            toast.success("Password changed. Log in again.")
+            // the change ended every session, this one included
+            await signOut({ callbackUrl: "/auth" })
         })
     }
 

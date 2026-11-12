@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { LoginSchema } from "@/schemas/auth.schema"
 import { clientIp, rateLimit, resetRateLimit } from "@/lib/rate-limit"
+import { isSessionCurrent } from "@/services/user.service"
 
 // signIn() on the client receives this as result.code
 class RateLimited extends CredentialsSignin {
@@ -62,6 +63,7 @@ export const { handlers, auth } = NextAuth({
                         id: user.id,
                         email: user.email,
                         name: user.name,
+                        tokenVersion: user.tokenVersion,
                     };
                 } catch (error) {
                     console.error("Auth error:", error);
@@ -79,8 +81,18 @@ export const { handlers, auth } = NextAuth({
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id
+                token.v = (user as { tokenVersion?: number }).tokenVersion ?? 0
+                return token
             }
-            return token
+            // every later request: drop sessions from before a password change or of a deleted account.
+            // Sessions issued before tokenVersion existed carry no `v` and count as version 0.
+            try {
+                return (await isSessionCurrent(token.id as string, (token.v as number | undefined) ?? 0)) ? token : null
+            } catch (error) {
+                // a database hiccup must not sign everyone out
+                console.error("Session check failed:", error)
+                return token
+            }
         },
         async session({ session, token }) {
             if (session.user) {

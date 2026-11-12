@@ -27,7 +27,7 @@ A personal game tracker. Find games from the [RAWG](https://rawg.io) database, p
 - Pick a nickname and upload a profile picture. Photos are cropped and shrunk in the browser before upload, and shown on the navbar and your public profile
 - Turn your public profile on or off, change your username and copy your share link
 - Export your whole shelf as CSV or JSON
-- Change your password, or delete your account and everything on it
+- Change your password (this signs you out on every device), or delete your account and everything on it
 - Sign up and log in with email and password
 - Login, sign-up, password checks and photo uploads are rate limited to slow down password guessing and spam
 

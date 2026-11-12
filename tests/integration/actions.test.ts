@@ -20,6 +20,7 @@ const {
     addToShelf, createList, deleteList, removeFromShelf, reorderBacklog, toggleListItem, updateList, updateShelf,
 } = await import("@/app/shelf/actions")
 const { changePassword, deleteAccount, removeAvatar, updateProfile, uploadAvatar } = await import("@/app/profile/actions")
+const { isSessionCurrent } = await import("@/services/user.service")
 
 let userId: string
 
@@ -226,6 +227,14 @@ describe("updateProfile", () => {
     it("rejects a nickname that is too short", async () => {
         expect((await updateProfile({ name: "ab" })).ok).toBe(false)
     })
+
+    // Regression: revalidating "/" wiped the cached RAWG responses for everyone on each profile edit
+    it("refreshes the router without revalidating the whole site", async () => {
+        await updateProfile({ name: "Evan R" })
+
+        expect(refresh).toHaveBeenCalled()
+        expect(revalidatePath.mock.calls).toEqual([["/u", "layout"]])
+    })
 })
 
 describe("avatar", () => {
@@ -300,6 +309,20 @@ describe("changePassword", () => {
         expect(await changePassword(input)).toEqual({ ok: true })
         expect(await bcrypt.compare("Newpass123", await storedHash())).toBe(true)
         expect(await bcrypt.compare("Secret123", await storedHash())).toBe(false)
+    })
+
+    it("ends the sessions issued before the change", async () => {
+        expect(await isSessionCurrent(userId, 0)).toBe(true)
+
+        await changePassword(input)
+
+        expect(await isSessionCurrent(userId, 0)).toBe(false)
+        expect(await isSessionCurrent(userId, 1)).toBe(true)
+    })
+
+    it("treats the session of a deleted account as ended", async () => {
+        await deleteAccount({ password: "Secret123" })
+        expect(await isSessionCurrent(userId, 0)).toBe(false)
     })
 
     it("keeps the old password when the current one is wrong", async () => {

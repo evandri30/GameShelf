@@ -1,12 +1,19 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { refresh, revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { Prisma } from '@/generated/prisma/client'
 import { AVATAR_MAX_BYTES, AVATAR_TYPES, ChangePasswordSchema, DeleteAccountSchema, ProfileSettingsSchema } from '@/schemas/profile.schema'
 import { changeUserPassword, deleteUserAccount, removeUserAvatar, setUserAvatar, updateProfileSettings } from '@/services/user.service'
 import { rateLimit, resetRateLimit } from '@/lib/rate-limit'
 import type { ActionResult } from '@/app/shelf/actions'
+
+// Name and avatar show on the navbar (rendered per request, so refresh() is enough) and on the public
+// profile. Not revalidatePath('/'): that also drops every cached RAWG response, for every user.
+function revalidateProfileViews() {
+    revalidatePath('/u', 'layout')
+    refresh()
+}
 
 export async function updateProfile(input: { name?: string; username?: string; isPublic?: boolean }): Promise<ActionResult<{ name: string | null; username: string; isPublic: boolean }>> {
     const session = await auth()
@@ -18,8 +25,7 @@ export async function updateProfile(input: { name?: string; username?: string; i
 
     try {
         const profile = await updateProfileSettings(userId, result.data)
-        // the navbar on every page shows the name
-        revalidatePath('/', 'layout')
+        revalidateProfileViews()
         return { ok: true, data: profile }
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -57,7 +63,7 @@ export async function uploadAvatar(formData: FormData): Promise<ActionResult<{ i
 
     try {
         const image = await setUserAvatar(userId, bytes, file.type)
-        revalidatePath('/', 'layout')
+        revalidateProfileViews()
         return { ok: true, data: { image } }
     } catch (error) {
         console.error(error)
@@ -72,7 +78,7 @@ export async function removeAvatar(): Promise<ActionResult> {
 
     try {
         await removeUserAvatar(userId)
-        revalidatePath('/', 'layout')
+        revalidateProfileViews()
         return { ok: true }
     } catch (error) {
         console.error(error)

@@ -65,6 +65,8 @@ describe("UpdateShelfSchema", () => {
         expect(UpdateShelfSchema.safeParse({ playtime: null }).success).toBe(true)
         expect(UpdateShelfSchema.safeParse({ playtime: -5 }).error?.issues[0].message).toBe("Playtime cannot be negative")
         expect(UpdateShelfSchema.safeParse({ playtime: 1.5 }).success).toBe(false)
+        expect(UpdateShelfSchema.safeParse({ playtime: 99999 }).success).toBe(true)
+        expect(UpdateShelfSchema.safeParse({ playtime: 100000 }).error?.issues[0].message).toBe("Playtime is too large")
     })
 
     it("caps the caption at 1000 characters", () => {

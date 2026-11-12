@@ -17,5 +17,6 @@ export const UpdateShelfSchema = z.object({
     }).optional(),
     rating: z.number().int().min(0).max(5).nullable().optional(),
     caption: z.string().max(1000, "Caption is too long").optional().nullable(),
-    playtime: z.number().int().min(0, "Playtime cannot be negative").nullable().optional()
+    // far above any real playtime, far below what the Int column holds
+    playtime: z.number().int().min(0, "Playtime cannot be negative").max(99999, "Playtime is too large").nullable().optional()
 })
