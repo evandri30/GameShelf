@@ -1,10 +1,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, CalendarCheck, Clock, Gamepad2, Play, Star, Trophy } from "lucide-react"
+import { ArrowLeft, CalendarCheck, Clock, Gamepad2, Play, Star, Trophy, Wallet } from "lucide-react"
 import { getSession } from "@/auth"
 import { getReviewYears, getYearInReview } from "@/services/shelf.service"
 import { getCroppedImageUrl } from "@/utils/image"
+import { formatIdr, formatIdrShort } from "@/utils/currency"
 import { getTimeZone } from "@/lib/timezone"
 import { Card, SectionHeading } from "@/components/ui/Card"
 import CompletionChart, { MONTH_LABELS } from "@/components/dashboard/CompletionChart"
@@ -35,6 +36,8 @@ export default async function YearInReviewPage({ params }: Props) {
         { label: "Avg. rating", value: review.averageRating ? review.averageRating.toFixed(1) : "–", icon: Star },
         { label: "Started", value: review.started, icon: Play },
         { label: "Added to shelf", value: review.added, icon: Gamepad2 },
+        // by purchase date; smaller on phones so "12,3 jt" fits a half-width card
+        { label: "Spent", value: formatIdrShort(review.spent), title: formatIdr(review.spent), icon: Wallet, valueClass: "text-2xl md:text-4xl" },
     ]
 
     return (
@@ -65,14 +68,14 @@ export default async function YearInReviewPage({ params }: Props) {
                 )}
             </header>
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                {kpis.map(({ label, value, icon: Icon }) => (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                {kpis.map(({ label, value, title, icon: Icon, valueClass }) => (
                     <Card key={label} className="p-5">
                         <div className="flex items-center justify-between text-muted">
                             <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
                             <Icon className="h-4 w-4 text-accent" aria-hidden />
                         </div>
-                        <p className="mt-3 font-mono text-4xl font-bold text-fg">{value}</p>
+                        <p className={`mt-3 font-mono font-bold text-fg ${valueClass ?? "text-4xl"}`} title={title}>{value}</p>
                     </Card>
                 ))}
             </div>

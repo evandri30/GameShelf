@@ -6,6 +6,7 @@ import { Prisma } from '@/generated/prisma/client'
 import { createUserShelf, deleteUserShelf, editUserShelf, reorderUserBacklog } from '@/services/shelf.service'
 import { getGameBySlug } from '@/lib/rawg'
 import { isRawgMediaUrl } from '@/utils/image'
+import { getTimeZone, zonedStartOfDay } from '@/lib/timezone'
 import { createUserList, deleteUserList, setListMembership, updateUserList } from '@/services/list.service'
 import { CreateShelfSchema, UpdateShelfSchema } from '@/schemas/shelf.schema'
 import { BacklogOrderSchema, ListSchema } from '@/schemas/profile.schema'
@@ -72,8 +73,21 @@ export async function updateShelf(id: string, input: UpdateShelfInput): Promise<
     const result = UpdateShelfSchema.safeParse(input)
     if (!result.success) return { ok: false, error: result.error.issues[0]?.message ?? 'Invalid input' }
 
+    // date fields arrive as calendar days; store local midnight in the viewer's zone so they land in the right month
+    const { purchasedAt, startedAt, completedAt, ...rest } = result.data
+    const tz = purchasedAt || startedAt || completedAt ? await getTimeZone() : 'UTC'
+    const toInstant = (day: string | null | undefined) => {
+        if (day == null) return day
+        const [y, m, d] = day.split('-').map(Number)
+        return zonedStartOfDay(y, m - 1, d, tz)
+    }
+    const update = { ...rest, purchasedAt: toInstant(purchasedAt), startedAt: toInstant(startedAt), completedAt: toInstant(completedAt) }
+    if ([update.purchasedAt, update.startedAt, update.completedAt].some((date) => date && date > new Date())) {
+        return { ok: false, error: "Date can't be in the future" }
+    }
+
     try {
-        await editUserShelf(id, userId, result.data)
+        await editUserShelf(id, userId, update)
     } catch (error) {
         // P2025: no shelf with this id belonging to the user
         if (isPrismaError(error, 'P2025')) return { ok: false, error: 'Game not found in your shelf' }

@@ -47,7 +47,7 @@ export default async function DashboardPage() {
                 </Link>
             </div>
 
-            <DashboardStats data={data} />
+            <DashboardStats data={data} spent={data.totalSpent} />
 
             <CompletionChart
                 title="Finished, last 12 months"

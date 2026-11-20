@@ -18,6 +18,8 @@ export type ShelfFDetailProps = ShelfProps & {
     rawgId: number;
     startedAt: Date | null;
     completedAt: Date | null;
+    purchasedAt: Date | null;
+    purchasePrice: number | null;
     createdAt: Date;
 }
 

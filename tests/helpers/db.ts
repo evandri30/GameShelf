@@ -30,6 +30,8 @@ type ShelfOverrides = {
     playtime?: number | null
     startedAt?: Date | null
     completedAt?: Date | null
+    purchasedAt?: Date | null
+    purchasePrice?: number | null
     backlogPosition?: number | null
     createdAt?: Date
 }
@@ -49,6 +51,8 @@ export async function makeShelf(userId: string, overrides: ShelfOverrides = {}) 
             playtime: overrides.playtime ?? null,
             startedAt: overrides.startedAt ?? null,
             completedAt: overrides.completedAt ?? null,
+            purchasedAt: overrides.purchasedAt ?? null,
+            purchasePrice: overrides.purchasePrice ?? null,
             backlogPosition: overrides.backlogPosition ?? null,
             ...(overrides.createdAt && { createdAt: overrides.createdAt }),
         },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isValidTimeZone, zonedParts, zonedStartOfMonth } from "@/lib/timezone"
+import { isValidTimeZone, zonedParts, zonedStartOfDay, zonedStartOfMonth } from "@/lib/timezone"
 
 describe("zonedParts", () => {
     it("reads the calendar month in the given zone", () => {
@@ -20,6 +20,13 @@ describe("zonedStartOfMonth", () => {
     it("rolls months past either end of the year", () => {
         expect(zonedStartOfMonth(2026, -1, "UTC").toISOString()).toBe("2025-12-01T00:00:00.000Z")
         expect(zonedStartOfMonth(2025, 12, "UTC").toISOString()).toBe("2026-01-01T00:00:00.000Z")
+    })
+})
+
+describe("zonedStartOfDay", () => {
+    it("is local midnight on that day", () => {
+        expect(zonedStartOfDay(2025, 2, 1, "Asia/Jakarta").toISOString()).toBe("2025-02-28T17:00:00.000Z")
+        expect(zonedStartOfDay(2025, 2, 10, "America/New_York").toISOString()).toBe("2025-03-10T04:00:00.000Z")
     })
 })
 

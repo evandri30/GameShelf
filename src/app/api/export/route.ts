@@ -5,7 +5,7 @@ import { getShelfExport } from "@/services/shelf.service"
 type Row = Awaited<ReturnType<typeof getShelfExport>>[number]
 
 const COLUMNS: (keyof Row)[] = [
-    "title", "slug", "rawgId", "status", "rating", "playtime", "caption", "startedAt", "completedAt", "createdAt", "updatedAt",
+    "title", "slug", "rawgId", "status", "rating", "playtime", "caption", "startedAt", "completedAt", "purchasedAt", "purchasePrice", "createdAt", "updatedAt",
 ]
 
 function csvCell(value: Row[keyof Row]) {

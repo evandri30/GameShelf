@@ -91,6 +91,31 @@ describe("editUserShelf", () => {
         expect(updated.completedAt).toBeNull()
     })
 
+    it("moving to DROPPED records the drop as last played", async () => {
+        const game = await add(1, "PLAYING")
+        const updated = await editUserShelf(game.id, userId, { status: "DROPPED" })
+
+        expect(updated.completedAt).toBeInstanceOf(Date)
+        expect(updated.startedAt).toEqual(game.startedAt)
+    })
+
+    it("switching between COMPLETED and DROPPED keeps the last played date", async () => {
+        const game = await makeShelf(userId, { status: "COMPLETED", completedAt: new Date("2023-06-02") })
+        const dropped = await editUserShelf(game.id, userId, { status: "DROPPED" })
+        const completed = await editUserShelf(game.id, userId, { status: "COMPLETED" })
+
+        expect(dropped.completedAt).toEqual(new Date("2023-06-02"))
+        expect(completed.completedAt).toEqual(new Date("2023-06-02"))
+    })
+
+    it("saves hand-entered purchase and play dates without touching the status", async () => {
+        const game = await add(1, "COMPLETED")
+        const dates = { purchasedAt: new Date("2023-03-10"), startedAt: new Date("2023-03-12"), completedAt: new Date("2023-06-02") }
+        const updated = await editUserShelf(game.id, userId, { ...dates, purchasePrice: 350_000 })
+
+        expect(updated).toMatchObject({ ...dates, purchasePrice: 350_000, status: "COMPLETED" })
+    })
+
     it("re-sending the same status leaves the timeline alone", async () => {
         const game = await add(1, "COMPLETED")
         const updated = await editUserShelf(game.id, userId, { status: "COMPLETED", rating: 5 })
@@ -195,6 +220,24 @@ describe("stats", () => {
         expect(await getReviewYears(userId)).toEqual([2025, 2023])
     })
 
+    it("getReviewYears includes years with only purchases, but not drops", async () => {
+        await makeShelf(userId, { status: "COMPLETED", completedAt: at("2025-06-01") })
+        await makeShelf(userId, { status: "PLANNED", purchasedAt: at("2022-11-25") })
+        await makeShelf(userId, { status: "DROPPED", completedAt: at("2021-01-01") })
+
+        expect(await getReviewYears(userId)).toEqual([2025, 2022])
+    })
+
+    it("getYearInReview sums what was bought that year", async () => {
+        await makeShelf(userId, { purchasedAt: at("2025-02-01"), purchasePrice: 350_000 })
+        await makeShelf(userId, { purchasedAt: at("2025-12-01"), purchasePrice: 150_000 })
+        await makeShelf(userId, { purchasedAt: at("2024-12-31"), purchasePrice: 999_000 })
+        await makeShelf(userId, { purchasePrice: 50_000 })
+
+        expect((await getYearInReview(userId, 2025)).spent).toBe(500_000)
+        expect((await getYearInReview(userId, 2023)).spent).toBe(0)
+    })
+
     it("counts a game finished late on New Year's Eve UTC in the user's new year", async () => {
         // 2025-12-31 18:00 UTC is 2026-01-01 01:00 in Jakarta (UTC+7)
         await makeShelf(userId, { status: "COMPLETED", completedAt: new Date("2025-12-31T18:00:00Z") })
@@ -221,14 +264,15 @@ describe("stats", () => {
     })
 
     it("getDashboardData totals the shelf and ignores 0 ratings in the average", async () => {
-        await makeShelf(userId, { status: "COMPLETED", rating: 4, playtime: 10 })
-        await makeShelf(userId, { status: "PLAYING", rating: 0, playtime: 5 })
+        await makeShelf(userId, { status: "COMPLETED", rating: 4, playtime: 10, purchasePrice: 350_000 })
+        await makeShelf(userId, { status: "PLAYING", rating: 0, playtime: 5, purchasePrice: 0 })
         await makeShelf(userId, { status: "PLANNED", rating: 2 })
 
         const data = await getDashboardData(userId)
 
         expect(data?.totalGames).toBe(3)
         expect(data?.totalHours).toBe(15)
+        expect(data?.totalSpent).toBe(350_000)
         expect(data?.averageRating).toBe(3)
         expect(data?.ratedGames).toBe(2)
         expect(data?.stats.COMPLETED).toEqual({ count: 1, playtime: 10 })

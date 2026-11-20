@@ -41,7 +41,12 @@ export function zonedParts(date: Date, tz: string) {
 
 // The UTC instant of local midnight on the 1st of a month in `tz`; month may run past 0-11
 export function zonedStartOfMonth(year: number, month: number, tz: string) {
-    const guess = Date.UTC(year, month, 1)
+    return zonedStartOfDay(year, month, 1, tz)
+}
+
+// The UTC instant of local midnight on a calendar day in `tz` (month 0-11)
+export function zonedStartOfDay(year: number, month: number, day: number, tz: string) {
+    const guess = Date.UTC(year, month, day)
     // how far the zone's wall clock is ahead of UTC at that moment
     const p = partsIn(new Date(guess), tz)
     const offset = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - guess

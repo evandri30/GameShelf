@@ -1,8 +1,9 @@
-import { CheckCircle2, Clock, Gamepad2, Star, Trophy } from "lucide-react"
+import { CheckCircle2, Clock, Gamepad2, Star, Trophy, Wallet } from "lucide-react"
 import type { ShelfStatus } from '@/generated/prisma/browser'
 import Image from "next/image"
 import Link from "next/link"
 import { getCroppedImageUrl } from "@/utils/image"
+import { formatIdr, formatIdrShort } from "@/utils/currency"
 import { Card } from "@/components/ui/Card"
 import StatusBreakdown from "./StatusBreakdown"
 
@@ -15,11 +16,12 @@ export type DashboardData = {
     topGames: { id: string; title: string; slug: string; backgroundImage: string | null; rating: number | null; playtime: number | null }[]
 }
 
-export default function DashboardStats({ data }: { data: DashboardData }) {
+// `spent` is private: only the owner's dashboard passes it, the public profile leaves it out
+export default function DashboardStats({ data, spent }: { data: DashboardData; spent?: number }) {
     const completed = data.stats.COMPLETED?.count ?? 0
     const completionRate = data.totalGames ? Math.round((completed / data.totalGames) * 100) : 0
 
-    const kpis = [
+    const kpis: { label: string; value: string; hint: string; icon: typeof Gamepad2; className?: string }[] = [
         { label: "Games", value: data.totalGames.toLocaleString("en-US"), hint: "on the shelf", icon: Gamepad2 },
         { label: "Completed", value: completed.toLocaleString("en-US"), hint: `${completionRate}% completion`, icon: CheckCircle2 },
         { label: "Hours played", value: data.totalHours.toLocaleString("en-US"), hint: "logged so far", icon: Clock },
@@ -30,13 +32,17 @@ export default function DashboardStats({ data }: { data: DashboardData }) {
             icon: Star,
         },
     ]
+    if (spent !== undefined) {
+        // spans the row on phones so the fifth card isn't left alone
+        kpis.push({ label: "Spent", value: formatIdrShort(spent), hint: formatIdr(spent), icon: Wallet, className: "col-span-2 lg:col-span-1" })
+    }
 
     return (
         <div className="space-y-6">
             {/* KPI strip */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {kpis.map(({ label, value, hint, icon: Icon }) => (
-                    <Card key={label} className="p-5">
+            <div className={`grid grid-cols-2 gap-4 ${kpis.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
+                {kpis.map(({ label, value, hint, icon: Icon, className }) => (
+                    <Card key={label} className={`p-5 ${className ?? ""}`}>
                         <div className="flex items-center justify-between text-muted">
                             <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
                             <Icon className="h-4 w-4 text-accent" aria-hidden />

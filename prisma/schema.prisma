@@ -53,9 +53,13 @@ model Shelf {
   rating    Int?        
   caption   String?     @db.Text
   playtime  Int?        
-  // set automatically when the status moves to PLAYING / COMPLETED
+  // set automatically when the status changes; the user can correct both.
+  // completedAt is shown as "Last played": the finish date for COMPLETED, the drop date for DROPPED
   startedAt   DateTime?
   completedAt DateTime?
+  purchasedAt   DateTime?
+  // whole rupiah
+  purchasePrice Int?
   // order of PLANNED games in the backlog queue (lower plays first)
   backlogPosition Int?
   listItems ShelfListItem[]

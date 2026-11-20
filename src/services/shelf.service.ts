@@ -37,6 +37,8 @@ export async function getShelfExport(userId: string) {
             caption: true,
             startedAt: true,
             completedAt: true,
+            purchasedAt: true,
+            purchasePrice: true,
             createdAt: true,
             updatedAt: true
         }
@@ -96,11 +98,13 @@ async function timelineFor(
     if (next === 'PLAYING') {
         timeline.startedAt = current?.startedAt ?? now
         timeline.completedAt = null
-    } else if (next === 'COMPLETED') {
-        timeline.startedAt = current?.startedAt ?? now
-        timeline.completedAt = now
+    } else if (next === 'COMPLETED' || next === 'DROPPED') {
+        if (next === 'COMPLETED') timeline.startedAt = current?.startedAt ?? now
+        // completedAt doubles as "last played": a drop records it too, and switching between
+        // COMPLETED and DROPPED keeps a date the user may have entered by hand
+        timeline.completedAt = current?.completedAt ?? now
     } else {
-        // PLANNED or DROPPED: not finished (any more)
+        // PLANNED: not played (any more)
         timeline.completedAt = null
     }
 
@@ -121,7 +125,18 @@ export async function createUserShelf(userId: string, rawgId: number, title: str
     })
 }
 
-export async function editUserShelf(id: string, userId: string, update: { status?: ShelfStatus, rating?: number | null, caption?: string | null, playtime?: number | null }) {
+export type ShelfUpdate = {
+    status?: ShelfStatus
+    rating?: number | null
+    caption?: string | null
+    playtime?: number | null
+    purchasedAt?: Date | null
+    purchasePrice?: number | null
+    startedAt?: Date | null
+    completedAt?: Date | null
+}
+
+export async function editUserShelf(id: string, userId: string, update: ShelfUpdate) {
     let timeline: Timeline = {}
 
     if (update.status) {
@@ -190,20 +205,21 @@ export async function getCompletionsByMonth(userId: string, tz = 'UTC', months =
     return buckets
 }
 
-// Years that have at least one completed game, newest first (for the Year in Review switcher)
+// Years with at least one completed or bought game, newest first (for the Year in Review switcher)
 export async function getReviewYears(userId: string, tz = 'UTC') {
     const rows = await prisma.shelf.findMany({
-        where: { userId, status: 'COMPLETED', completedAt: { not: null } },
-        select: { completedAt: true }
+        where: { userId, OR: [{ status: 'COMPLETED', completedAt: { not: null } }, { purchasedAt: { not: null } }] },
+        select: { status: true, completedAt: true, purchasedAt: true }
     })
-    return [...new Set(rows.map((r) => zonedParts(r.completedAt!, tz).year))].sort((a, b) => b - a)
+    const dates = rows.flatMap((r) => [r.status === 'COMPLETED' ? r.completedAt : null, r.purchasedAt].filter((d) => d !== null))
+    return [...new Set(dates.map((d) => zonedParts(d, tz).year))].sort((a, b) => b - a)
 }
 
 export async function getYearInReview(userId: string, year: number, tz = 'UTC') {
     const from = zonedStartOfMonth(year, 0, tz)
     const to = zonedStartOfMonth(year + 1, 0, tz)
 
-    const [completed, started, added] = await Promise.all([
+    const [completed, started, added, bought] = await Promise.all([
         prisma.shelf.findMany({
             where: { userId, status: 'COMPLETED', completedAt: { gte: from, lt: to } },
             orderBy: { completedAt: 'asc' },
@@ -211,6 +227,7 @@ export async function getYearInReview(userId: string, year: number, tz = 'UTC') 
         }),
         prisma.shelf.count({ where: { userId, startedAt: { gte: from, lt: to } } }),
         prisma.shelf.count({ where: { userId, createdAt: { gte: from, lt: to } } }),
+        prisma.shelf.aggregate({ where: { userId, purchasedAt: { gte: from, lt: to } }, _sum: { purchasePrice: true } }),
     ])
 
     const months = Array.from({ length: 12 }, (_, month) => ({
@@ -225,6 +242,7 @@ export async function getYearInReview(userId: string, year: number, tz = 'UTC') 
         started,
         added,
         hours: completed.reduce((acc, g) => acc + (g.playtime ?? 0), 0),
+        spent: bought._sum.purchasePrice ?? 0,
         averageRating: rated.length ? rated.reduce((acc, g) => acc + g.rating!, 0) / rated.length : null,
         favorites: [...rated].sort((a, b) => b.rating! - a.rating! || (b.playtime ?? 0) - (a.playtime ?? 0)).slice(0, 3),
         months,
@@ -266,7 +284,7 @@ export const getDashboardData = cache(async (userId: string) => {
         prisma.shelf.aggregate({
             where: { userId },
             _count: { id: true },
-            _sum: { playtime: true }
+            _sum: { playtime: true, purchasePrice: true }
         }),
         // ratings of 0 are legacy "cleared" values, not real scores
         prisma.shelf.aggregate({
@@ -287,6 +305,8 @@ export const getDashboardData = cache(async (userId: string) => {
         }, {} as Partial<Record<ShelfStatus, { count: number; playtime: number }>>),
         totalGames: totals._count.id,
         totalHours: totals._sum.playtime ?? 0,
+        // private: only the owner's /dashboard renders it, never the public profile
+        totalSpent: totals._sum.purchasePrice ?? 0,
         averageRating: rated._avg.rating,
         ratedGames: rated._count.rating,
         topGames

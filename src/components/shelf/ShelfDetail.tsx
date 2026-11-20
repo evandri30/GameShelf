@@ -145,11 +145,11 @@ export default function ShelfDetail({ shelf, timeZone, listsSlot }: Props) {
 
     const formatDate = (date: Date | null) =>
         date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone }) : null
-    // filled in automatically as the status changes
+    // filled in as the status changes; corrected by hand in the History card
     const timeline = [
         { label: "Added", date: formatDate(shelf.createdAt) },
         { label: "Started", date: formatDate(shelf.startedAt) },
-        { label: "Finished", date: formatDate(shelf.completedAt) },
+        { label: "Last played", date: formatDate(shelf.completedAt) },
     ].filter((step) => step.date)
 
     return (
@@ -271,6 +271,129 @@ export default function ShelfDetail({ shelf, timeZone, listsSlot }: Props) {
                     <p className="mt-2 text-right font-mono text-xs text-subtle">{notes.length}/{NOTES_MAX}</p>
                 </Card>
             </div>
+
+            <HistoryCard shelf={shelf} status={optimistic.status} timeZone={timeZone} save={save} />
         </div>
+    )
+}
+
+type DateField = "purchasedAt" | "startedAt" | "completedAt"
+
+const PRICE_MAX = 100_000_000
+const groupDigits = new Intl.NumberFormat("id-ID")
+const priceText = (price: number | null) => (price === null ? "" : groupDigits.format(price))
+
+// Real purchase and play dates, backfilled by hand. Saves on blur or Enter, like Play hours.
+function HistoryCard({ shelf, status, timeZone, save }: {
+    shelf: ShelfFDetailProps
+    status: ShelfStatus
+    timeZone: string
+    save: (patch: UpdateShelfInput) => Promise<boolean>
+}) {
+    const [, startTransition] = useTransition()
+    const [state, setState] = useState<SaveState>("idle")
+
+    // the date input wants YYYY-MM-DD as seen in the viewer's zone
+    const toDay = (date: Date | null) => (date ? new Date(date).toLocaleDateString("en-CA", { timeZone }) : "")
+    const server = {
+        purchasedAt: toDay(shelf.purchasedAt),
+        startedAt: toDay(shelf.startedAt),
+        completedAt: toDay(shelf.completedAt),
+        price: priceText(shelf.purchasePrice),
+    }
+
+    const [values, setValues] = useState(server)
+    // a status change or save re-renders with new dates from the server: take those, but leave fields that didn't change alone
+    const [prevServer, setPrevServer] = useState(server)
+    const changed = (Object.keys(server) as (keyof typeof server)[]).filter((k) => server[k] !== prevServer[k])
+    if (changed.length) {
+        setPrevServer(server)
+        setValues({ ...values, ...Object.fromEntries(changed.map((k) => [k, server[k]])) })
+    }
+
+    const set = (key: keyof typeof server, value: string) => {
+        setValues((v) => ({ ...v, [key]: value }))
+        setState("idle")
+    }
+
+    const commit = (patch: UpdateShelfInput) => {
+        setState("saving")
+        startTransition(async () => setState((await save(patch)) ? "saved" : "idle"))
+    }
+
+    const saveDate = (field: DateField) => {
+        const value = values[field]
+        if (value === server[field]) return
+        // started / last played feed the stats, so they can be corrected but not wiped
+        if (!value && field !== "purchasedAt") return set(field, server[field])
+        commit({ [field]: value || null })
+    }
+
+    const savePrice = () => {
+        const digits = values.price.replace(/\D/g, "")
+        const price = digits ? Number(digits) : null
+        if (price !== null && price > PRICE_MAX) {
+            toast.error("Price is too large")
+            return set("price", server.price)
+        }
+        set("price", priceText(price))
+        if (price !== shelf.purchasePrice) commit({ purchasePrice: price })
+    }
+
+    const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && e.currentTarget.blur()
+    const inputClass = "w-full min-w-0 border-b border-line-strong bg-transparent py-1 font-mono text-lg text-fg transition-colors focus:border-accent focus:outline-none"
+    const labelClass = "text-xs font-semibold uppercase tracking-wider text-subtle"
+
+    const dates: { field: DateField; label: string; show: boolean }[] = [
+        { field: "purchasedAt", label: "Bought on", show: true },
+        { field: "startedAt", label: "Started", show: status !== "PLANNED" },
+        { field: "completedAt", label: "Last played", show: status === "COMPLETED" || status === "DROPPED" },
+    ]
+    const [bought, ...played] = dates
+
+    const dateInput = ({ field, label }: (typeof dates)[number]) => (
+        <div key={field} className="space-y-1">
+            <label htmlFor={field} className={labelClass}>{label}</label>
+            <input
+                id={field}
+                type="date"
+                value={values[field]}
+                onChange={(e) => set(field, e.target.value)}
+                onBlur={() => saveDate(field)}
+                onKeyDown={blurOnEnter}
+                className={inputClass}
+            />
+        </div>
+    )
+
+    return (
+        <Card className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-muted">History</h2>
+                <SaveIndicator state={state} />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {dateInput(bought)}
+                <div className="space-y-1">
+                    <label htmlFor="purchasePrice" className={labelClass}>Price</label>
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-mono text-muted">Rp</span>
+                        <input
+                            id="purchasePrice"
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="–"
+                            value={values.price}
+                            onChange={(e) => set("price", e.target.value)}
+                            onBlur={savePrice}
+                            onKeyDown={blurOnEnter}
+                            className={inputClass}
+                        />
+                    </div>
+                </div>
+                {played.filter((d) => d.show).map(dateInput)}
+            </div>
+            <p className="mt-4 text-xs text-subtle">Fill in when you really bought and last played it; Stats and Year in Review use these dates.</p>
+        </Card>
     )
 }

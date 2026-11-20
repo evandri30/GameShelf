@@ -10,6 +10,9 @@ const { auth, revalidatePath, refresh, getGameBySlug } = vi.hoisted(() => ({
     getGameBySlug: vi.fn(),
 }))
 
+// the viewer's zone cookie, read when a date is saved
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => ({ value: "Asia/Jakarta" }) }) }))
+
 // NextAuth and the router cache need a running Next server; the actions only care about their results
 vi.mock("@/auth", () => ({ auth }))
 vi.mock("next/cache", () => ({ revalidatePath, refresh }))
@@ -139,6 +142,26 @@ describe("updateShelf", () => {
 
         expect(await updateShelf(theirs.id, { rating: 5 })).toEqual({ ok: false, error: "Game not found in your shelf" })
         expect((await prisma.shelf.findUniqueOrThrow({ where: { id: theirs.id } })).rating).toBe(2)
+    })
+
+    it("stores a picked day as midnight in the viewer's zone", async () => {
+        const shelf = await makeShelf(userId)
+        expect(await updateShelf(shelf.id, { purchasedAt: "2023-03-01", purchasePrice: 350_000 })).toEqual({ ok: true })
+
+        expect(await prisma.shelf.findUniqueOrThrow({ where: { id: shelf.id } })).toMatchObject({
+            // Jakarta is UTC+7
+            purchasedAt: new Date("2023-02-28T17:00:00Z"),
+            purchasePrice: 350_000,
+        })
+    })
+
+    it("refuses future dates and clears a purchase date on null", async () => {
+        const shelf = await makeShelf(userId, { purchasedAt: new Date("2023-03-01") })
+        expect(await updateShelf(shelf.id, { completedAt: "2999-01-01" })).toEqual({ ok: false, error: "Date can't be in the future" })
+        expect(await updateShelf(shelf.id, { purchasedAt: "2023-02-30" })).toEqual({ ok: false, error: "Invalid date" })
+
+        expect(await updateShelf(shelf.id, { purchasedAt: null })).toEqual({ ok: true })
+        expect((await prisma.shelf.findUniqueOrThrow({ where: { id: shelf.id } })).purchasedAt).toBeNull()
     })
 
     it("does not revalidate /games", async () => {
