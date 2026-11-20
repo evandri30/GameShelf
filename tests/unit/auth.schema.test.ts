@@ -24,7 +24,7 @@ describe("LoginSchema", () => {
     })
 
     it("rejects a password shorter than 6 characters", () => {
-        expect(firstError(LoginSchema.safeParse({ email: "me@test.dev", password: "12345" }))).toBe("Password must be atleast 6 characters")
+        expect(firstError(LoginSchema.safeParse({ email: "me@test.dev", password: "12345" }))).toBe("Password must be at least 6 characters")
     })
 })
 
@@ -37,8 +37,8 @@ describe("RegisterSchema", () => {
 
     it.each([
         ["", "Name is Required"],
-        ["ab", "Name must be atleast 3 characters"],
-        ["a".repeat(21), "Name is to long"],
+        ["ab", "Name must be at least 3 characters"],
+        ["a".repeat(21), "Name is too long"],
     ])("rejects name %j", (name, message) => {
         expect(RegisterSchema.safeParse({ ...valid, name }).error?.issues.map((i) => i.message)).toContain(message)
     })

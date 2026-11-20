@@ -1,0 +1,547 @@
+- generic [active] [ref=f16e1]:
+  - navigation [ref=f16e2]:
+    - generic [ref=f16e3]:
+      - link "GameShelf" [ref=f16e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f16e5]:
+        - list [ref=f16e6]:
+          - listitem [ref=f16e7]:
+            - link "Discover" [ref=f16e8] [cursor=pointer]:
+              - /url: /games
+          - listitem [ref=f16e10]:
+            - link "My Shelf" [ref=f16e11] [cursor=pointer]:
+              - /url: /shelf
+          - listitem [ref=f16e12]:
+            - link "Stats" [ref=f16e13] [cursor=pointer]:
+              - /url: /dashboard
+        - generic [ref=f16e14]:
+          - search [ref=f16e15]:
+            - searchbox "Search games" [ref=f16e16]
+          - button "Open user menu" [ref=f16e18] [cursor=pointer]: U
+  - main [ref=f16e19]:
+    - generic [ref=f16e20]:
+      - generic [ref=f16e22]:
+        - search [ref=f16e23]:
+          - searchbox "Search games" [ref=f16e24]
+          - generic: /
+        - paragraph [ref=f16e25]: 901,419 games
+      - generic [ref=f16e26]:
+        - generic [ref=f16e27]: Filters
+        - generic [ref=f16e29]:
+          - generic [ref=f16e30]: Genre
+          - combobox "Genre" [ref=f16e31] [cursor=pointer]:
+            - option "All genres" [selected]
+            - option "Action"
+            - option "Indie"
+            - option "Adventure"
+            - option "RPG"
+            - option "Strategy"
+            - option "Shooter"
+            - option "Casual"
+            - option "Simulation"
+            - option "Puzzle"
+            - option "Arcade"
+            - option "Platformer"
+            - option "Massively Multiplayer"
+            - option "Racing"
+            - option "Sports"
+            - option "Fighting"
+            - option "Family"
+            - option "Board Games"
+            - option "Card"
+            - option "Educational"
+        - generic [ref=f16e32]:
+          - generic [ref=f16e33]: Platform
+          - combobox "Platform" [ref=f16e34] [cursor=pointer]:
+            - option "All platforms" [selected]
+            - option "PC"
+            - option "PlayStation"
+            - option "Xbox"
+            - option "iOS"
+            - option "Android"
+            - option "Apple Macintosh"
+            - option "Linux"
+            - option "Nintendo"
+            - option "Atari"
+            - option "Commodore / Amiga"
+            - option "SEGA"
+            - option "3DO"
+            - option "Neo Geo"
+            - option "Web"
+        - generic [ref=f16e35]:
+          - generic [ref=f16e36]: Release year
+          - combobox "Release year" [ref=f16e37] [cursor=pointer]:
+            - option "Any year" [selected]
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+            - option "1989"
+            - option "1988"
+            - option "1987"
+            - option "1986"
+            - option "1985"
+            - option "1984"
+            - option "1983"
+            - option "1982"
+            - option "1981"
+            - option "1980"
+        - generic [ref=f16e38]:
+          - generic [ref=f16e39]: Sort by
+          - combobox "Sort by" [ref=f16e40] [cursor=pointer]:
+            - option "Popular" [selected]
+            - option "Top rated"
+            - option "Metacritic"
+            - option "Newest"
+            - option "Title A–Z"
+      - region "Game of the Year winners" [ref=f16e41]:
+        - heading "Game of the Year winners" [level=2] [ref=f16e51]
+        - generic [ref=f16e55]:
+          - generic [ref=f16e56]: GOTY 2025
+          - 'heading "Clair Obscur: Expedition 33" [level=3] [ref=f16e64]'
+          - generic [ref=f16e65]:
+            - generic [ref=f16e66]: "4.4"
+            - generic [ref=f16e69]: "2025"
+            - generic [ref=f16e70]: RPG
+          - link "View details" [ref=f16e71] [cursor=pointer]:
+            - /url: /games/clair-obscur-expedition-33
+        - tablist "Choose a winner" [ref=f16e73]:
+          - 'tab "Clair Obscur: Expedition 33, GOTY 2025" [selected] [ref=f16e74] [cursor=pointer]':
+            - generic [ref=f16e75]: "2025"
+          - tab "Astro Bot, GOTY 2024" [ref=f16e76] [cursor=pointer]:
+            - generic [ref=f16e77]: "2024"
+          - tab "Baldur's Gate III, GOTY 2023" [ref=f16e78] [cursor=pointer]:
+            - generic [ref=f16e79]: "2023"
+          - tab "Elden Ring, GOTY 2022" [ref=f16e80] [cursor=pointer]:
+            - generic [ref=f16e81]: "2022"
+          - tab "It Takes Two, GOTY 2021" [ref=f16e82] [cursor=pointer]:
+            - generic [ref=f16e83]: "2021"
+          - tab "The Last of Us Part II, GOTY 2020" [ref=f16e84] [cursor=pointer]:
+            - generic [ref=f16e85]: "2020"
+          - 'tab "Sekiro: Shadows Die Twice, GOTY 2019" [ref=f16e86] [cursor=pointer]':
+            - generic [ref=f16e87]: "2019"
+          - tab "God of War (2018), GOTY 2018" [ref=f16e88] [cursor=pointer]:
+            - generic [ref=f16e89]: "2018"
+          - 'tab "The Legend of Zelda: Breath of the Wild, GOTY 2017" [ref=f16e90] [cursor=pointer]':
+            - generic [ref=f16e91]: "2017"
+          - tab "Overwatch, GOTY 2016" [ref=f16e92] [cursor=pointer]:
+            - generic [ref=f16e93]: "2016"
+          - 'tab "The Witcher 3: Wild Hunt, GOTY 2015" [ref=f16e94] [cursor=pointer]':
+            - generic [ref=f16e95]: "2015"
+          - 'tab "Dragon Age: Inquisition, GOTY 2014" [ref=f16e96] [cursor=pointer]':
+            - generic [ref=f16e97]: "2014"
+      - generic [ref=f16e98]:
+        - heading "Popular right now" [level=2] [ref=f16e105]
+        - generic [ref=f16e106]:
+          - article [ref=f16e107]:
+            - generic [ref=f16e110]:
+              - heading [level=2] [ref=f16e111]:
+                - link "Grand Theft Auto V" [ref=f16e112] [cursor=pointer]:
+                  - /url: /games/grand-theft-auto-v
+              - generic [ref=f16e113]:
+                - generic [ref=f16e114]: "4.5"
+                - generic [ref=f16e117]: "2013"
+                - generic [ref=f16e118]: Action
+              - generic [ref=f16e119]:
+                - generic [ref=f16e120]: PlayStation 5
+                - generic [ref=f16e121]: Xbox Series S/X
+                - generic [ref=f16e122]: PlayStation 3
+                - generic [ref=f16e123]: PC
+                - generic [ref=f16e124]: "+3"
+            - generic [ref=f16e125]:
+              - generic [ref=f16e126]: "92"
+              - button "Add Grand Theft Auto V to shelf" [ref=f16e129] [cursor=pointer]
+          - article [ref=f16e131]:
+            - generic [ref=f16e134]:
+              - heading [level=2] [ref=f16e135]:
+                - 'link "The Witcher 3: Wild Hunt" [ref=f16e136] [cursor=pointer]':
+                  - /url: /games/the-witcher-3-wild-hunt
+              - generic [ref=f16e137]:
+                - generic [ref=f16e138]: "4.6"
+                - generic [ref=f16e141]: "2015"
+                - generic [ref=f16e142]: Action · RPG
+              - generic [ref=f16e143]:
+                - generic [ref=f16e144]: PlayStation 5
+                - generic [ref=f16e145]: Xbox Series S/X
+                - generic [ref=f16e146]: macOS
+                - generic [ref=f16e147]: PlayStation 4
+                - generic [ref=f16e148]: "+3"
+            - generic [ref=f16e149]:
+              - generic [ref=f16e150]: "92"
+              - 'button "Add The Witcher 3: Wild Hunt to shelf" [ref=f16e153] [cursor=pointer]'
+          - article [ref=f16e155]:
+            - generic [ref=f16e158]:
+              - heading [level=2] [ref=f16e159]:
+                - link "Portal 2" [ref=f16e160] [cursor=pointer]:
+                  - /url: /games/portal-2
+              - generic [ref=f16e161]:
+                - generic [ref=f16e162]: "4.6"
+                - generic [ref=f16e165]: "2011"
+                - generic [ref=f16e166]: Shooter · Puzzle
+              - generic [ref=f16e167]:
+                - generic [ref=f16e168]: PlayStation 3
+                - generic [ref=f16e169]: PC
+                - generic [ref=f16e170]: Xbox 360
+                - generic [ref=f16e171]: Linux
+                - generic [ref=f16e172]: "+2"
+            - generic [ref=f16e173]:
+              - generic [ref=f16e174]: "95"
+              - button "Add Portal 2 to shelf" [ref=f16e177] [cursor=pointer]
+          - article [ref=f16e179]:
+            - generic [ref=f16e182]:
+              - heading [level=2] [ref=f16e183]:
+                - 'link "Counter-Strike: Global Offensive" [ref=f16e184] [cursor=pointer]':
+                  - /url: /games/counter-strike-global-offensive
+              - generic [ref=f16e185]:
+                - generic [ref=f16e186]: "3.6"
+                - generic [ref=f16e189]: "2012"
+                - generic [ref=f16e190]: Shooter
+              - generic [ref=f16e191]:
+                - generic [ref=f16e192]: PC
+                - generic [ref=f16e193]: Linux
+                - generic [ref=f16e194]: Xbox 360
+                - generic [ref=f16e195]: PlayStation 3
+            - generic [ref=f16e196]:
+              - generic [ref=f16e197]: "81"
+              - 'button "Add Counter-Strike: Global Offensive to shelf" [ref=f16e200] [cursor=pointer]'
+          - article [ref=f16e202]:
+            - generic [ref=f16e205]:
+              - heading [level=2] [ref=f16e206]:
+                - link "Portal" [ref=f16e207] [cursor=pointer]:
+                  - /url: /games/portal
+              - generic [ref=f16e208]:
+                - generic [ref=f16e209]: "4.5"
+                - generic [ref=f16e212]: "2007"
+                - generic [ref=f16e213]: Action · Puzzle
+              - generic [ref=f16e214]:
+                - generic [ref=f16e215]: macOS
+                - generic [ref=f16e216]: PC
+                - generic [ref=f16e217]: Android
+                - generic [ref=f16e218]: PlayStation 3
+                - generic [ref=f16e219]: "+3"
+            - generic [ref=f16e220]:
+              - generic [ref=f16e221]: "90"
+              - button "Add Portal to shelf" [ref=f16e224] [cursor=pointer]
+          - article [ref=f16e226]:
+            - generic [ref=f16e229]:
+              - heading [level=2] [ref=f16e230]:
+                - link "Tomb Raider" [ref=f16e231] [cursor=pointer]:
+                  - /url: /games/tomb-raider
+              - generic [ref=f16e232]:
+                - generic [ref=f16e233]: "4.1"
+                - generic [ref=f16e236]: "2013"
+                - generic [ref=f16e237]: Action
+              - generic [ref=f16e238]:
+                - generic [ref=f16e239]: PlayStation 3
+                - generic [ref=f16e240]: Xbox 360
+                - generic [ref=f16e241]: macOS
+                - generic [ref=f16e242]: PC
+            - generic [ref=f16e243]:
+              - generic [ref=f16e244]: "86"
+              - button "Add Tomb Raider to shelf" [ref=f16e247] [cursor=pointer]
+          - article [ref=f16e249]:
+            - generic [ref=f16e252]:
+              - heading [level=2] [ref=f16e253]:
+                - link "Left 4 Dead 2" [ref=f16e254] [cursor=pointer]:
+                  - /url: /games/left-4-dead-2
+              - generic [ref=f16e255]:
+                - generic [ref=f16e256]: "4.1"
+                - generic [ref=f16e259]: "2009"
+                - generic [ref=f16e260]: Action · Shooter
+              - generic [ref=f16e261]:
+                - generic [ref=f16e262]: Xbox 360
+                - generic [ref=f16e263]: Linux
+                - generic [ref=f16e264]: PC
+                - generic [ref=f16e265]: macOS
+            - generic [ref=f16e266]:
+              - generic [ref=f16e267]: "89"
+              - button "Add Left 4 Dead 2 to shelf" [ref=f16e270] [cursor=pointer]
+          - article [ref=f16e272]:
+            - generic [ref=f16e275]:
+              - heading [level=2] [ref=f16e276]:
+                - link "Red Dead Redemption 2" [ref=f16e277] [cursor=pointer]:
+                  - /url: /games/red-dead-redemption-2
+              - generic [ref=f16e278]:
+                - generic [ref=f16e279]: "4.6"
+                - generic [ref=f16e282]: "2018"
+                - generic [ref=f16e283]: Action
+              - generic [ref=f16e284]:
+                - generic [ref=f16e285]: PC
+                - generic [ref=f16e286]: PlayStation 4
+                - generic [ref=f16e287]: Xbox One
+            - generic [ref=f16e288]:
+              - generic [ref=f16e289]: "96"
+              - button "Add Red Dead Redemption 2 to shelf" [ref=f16e292] [cursor=pointer]
+          - article [ref=f16e294]:
+            - generic [ref=f16e297]:
+              - heading [level=2] [ref=f16e298]:
+                - 'link "The Elder Scrolls V: Skyrim" [ref=f16e299] [cursor=pointer]':
+                  - /url: /games/the-elder-scrolls-v-skyrim
+              - generic [ref=f16e300]:
+                - generic [ref=f16e301]: "4.4"
+                - generic [ref=f16e304]: "2011"
+                - generic [ref=f16e305]: Action · RPG
+              - generic [ref=f16e306]:
+                - generic [ref=f16e307]: PlayStation 5
+                - generic [ref=f16e308]: PlayStation 4
+                - generic [ref=f16e309]: PC
+                - generic [ref=f16e310]: Xbox One
+                - generic [ref=f16e311]: "+4"
+            - generic [ref=f16e312]:
+              - generic [ref=f16e313]: "94"
+              - 'button "Add The Elder Scrolls V: Skyrim to shelf" [ref=f16e316] [cursor=pointer]'
+          - article [ref=f16e318]:
+            - generic [ref=f16e321]:
+              - heading [level=2] [ref=f16e322]:
+                - link "Half-Life 2" [ref=f16e323] [cursor=pointer]:
+                  - /url: /games/half-life-2
+              - generic [ref=f16e324]:
+                - generic [ref=f16e325]: "4.5"
+                - generic [ref=f16e328]: "2004"
+                - generic [ref=f16e329]: Action · Shooter
+              - generic [ref=f16e330]:
+                - generic [ref=f16e331]: PC
+                - generic [ref=f16e332]: macOS
+                - generic [ref=f16e333]: Xbox 360
+                - generic [ref=f16e334]: Linux
+                - generic [ref=f16e335]: "+2"
+            - generic [ref=f16e336]:
+              - generic [ref=f16e337]: "96"
+              - button "Add Half-Life 2 to shelf" [ref=f16e340] [cursor=pointer]
+          - article [ref=f16e342]:
+            - generic [ref=f16e345]:
+              - heading [level=2] [ref=f16e346]:
+                - link "BioShock Infinite" [ref=f16e347] [cursor=pointer]:
+                  - /url: /games/bioshock-infinite
+              - generic [ref=f16e348]:
+                - generic [ref=f16e349]: "4.4"
+                - generic [ref=f16e352]: "2013"
+                - generic [ref=f16e353]: Action · Shooter
+              - generic [ref=f16e354]:
+                - generic [ref=f16e355]: PlayStation 4
+                - generic [ref=f16e356]: Xbox 360
+                - generic [ref=f16e357]: Nintendo Switch
+                - generic [ref=f16e358]: Linux
+                - generic [ref=f16e359]: "+3"
+            - generic [ref=f16e360]:
+              - generic [ref=f16e361]: "94"
+              - button "Add BioShock Infinite to shelf" [ref=f16e364] [cursor=pointer]
+          - article [ref=f16e366]:
+            - generic [ref=f16e369]:
+              - heading [level=2] [ref=f16e370]:
+                - link "Borderlands 2" [ref=f16e371] [cursor=pointer]:
+                  - /url: /games/borderlands-2
+              - generic [ref=f16e372]:
+                - generic [ref=f16e373]: "4.0"
+                - generic [ref=f16e376]: "2012"
+                - generic [ref=f16e377]: Action · Shooter
+              - generic [ref=f16e378]:
+                - generic [ref=f16e379]: PlayStation 3
+                - generic [ref=f16e380]: macOS
+                - generic [ref=f16e381]: PC
+                - generic [ref=f16e382]: Android
+                - generic [ref=f16e383]: "+3"
+            - generic [ref=f16e384]:
+              - generic [ref=f16e385]: "89"
+              - button "Add Borderlands 2 to shelf" [ref=f16e388] [cursor=pointer]
+          - article [ref=f16e390]:
+            - generic [ref=f16e393]:
+              - heading [level=2] [ref=f16e394]:
+                - link "Life is Strange" [ref=f16e395] [cursor=pointer]:
+                  - /url: /games/life-is-strange-episode-1-2
+              - generic [ref=f16e396]:
+                - generic [ref=f16e397]: "4.1"
+                - generic [ref=f16e400]: "2015"
+                - generic [ref=f16e401]: Adventure
+              - generic [ref=f16e402]:
+                - generic [ref=f16e403]: iOS
+                - generic [ref=f16e404]: PC
+                - generic [ref=f16e405]: Linux
+                - generic [ref=f16e406]: PlayStation 3
+                - generic [ref=f16e407]: "+5"
+            - generic [ref=f16e408]:
+              - generic [ref=f16e409]: "83"
+              - button "Add Life is Strange to shelf" [ref=f16e412] [cursor=pointer]
+          - article [ref=f16e414]:
+            - generic [ref=f16e417]:
+              - heading [level=2] [ref=f16e418]:
+                - link "BioShock" [ref=f16e419] [cursor=pointer]:
+                  - /url: /games/bioshock
+              - generic [ref=f16e420]:
+                - generic [ref=f16e421]: "4.4"
+                - generic [ref=f16e424]: "2007"
+                - generic [ref=f16e425]: Action · Shooter
+              - generic [ref=f16e426]:
+                - generic [ref=f16e427]: PlayStation 3
+                - generic [ref=f16e428]: macOS
+                - generic [ref=f16e429]: PC
+                - generic [ref=f16e430]: Xbox 360
+            - generic [ref=f16e431]:
+              - generic [ref=f16e432]: "96"
+              - button "Add BioShock to shelf" [ref=f16e435] [cursor=pointer]
+          - article [ref=f16e437]:
+            - generic [ref=f16e440]:
+              - heading [level=2] [ref=f16e441]:
+                - link "God of War (2018)" [ref=f16e442] [cursor=pointer]:
+                  - /url: /games/god-of-war-2
+              - generic [ref=f16e443]:
+                - generic [ref=f16e444]: "4.5"
+                - generic [ref=f16e447]: "2018"
+                - generic [ref=f16e448]: Action
+              - generic [ref=f16e449]:
+                - generic [ref=f16e450]: PC
+                - generic [ref=f16e451]: PlayStation 4
+            - generic [ref=f16e452]:
+              - generic [ref=f16e453]: "94"
+              - button "Add God of War (2018) to shelf" [ref=f16e456] [cursor=pointer]
+          - article [ref=f16e458]:
+            - generic [ref=f16e461]:
+              - heading [level=2] [ref=f16e462]:
+                - link "Destiny 2" [ref=f16e463] [cursor=pointer]:
+                  - /url: /games/destiny-2
+              - generic [ref=f16e464]:
+                - generic [ref=f16e465]: "3.5"
+                - generic [ref=f16e468]: "2017"
+                - generic [ref=f16e469]: Action · Shooter
+              - generic [ref=f16e470]:
+                - generic [ref=f16e471]: PlayStation 4
+                - generic [ref=f16e472]: Xbox One
+                - generic [ref=f16e473]: PC
+                - generic [ref=f16e474]: Web
+                - generic [ref=f16e475]: "+2"
+            - generic [ref=f16e476]:
+              - generic [ref=f16e477]: "82"
+              - button "Add Destiny 2 to shelf" [ref=f16e480] [cursor=pointer]
+          - article [ref=f16e482]:
+            - generic [ref=f16e485]:
+              - heading [level=2] [ref=f16e486]:
+                - link "Fallout 4" [ref=f16e487] [cursor=pointer]:
+                  - /url: /games/fallout-4
+              - generic [ref=f16e488]:
+                - generic [ref=f16e489]: "3.8"
+                - generic [ref=f16e492]: "2015"
+                - generic [ref=f16e493]: Action · RPG
+              - generic [ref=f16e494]:
+                - generic [ref=f16e495]: PlayStation 4
+                - generic [ref=f16e496]: PC
+                - generic [ref=f16e497]: PlayStation 5
+                - generic [ref=f16e498]: Xbox One
+            - generic [ref=f16e499]:
+              - generic [ref=f16e500]: "84"
+              - button "Add Fallout 4 to shelf" [ref=f16e503] [cursor=pointer]
+          - article [ref=f16e505]:
+            - generic [ref=f16e508]:
+              - heading [level=2] [ref=f16e509]:
+                - link "Limbo" [ref=f16e510] [cursor=pointer]:
+                  - /url: /games/limbo
+              - generic [ref=f16e511]:
+                - generic [ref=f16e512]: "4.1"
+                - generic [ref=f16e515]: "2010"
+                - generic [ref=f16e516]: Action · Adventure
+              - generic [ref=f16e517]:
+                - generic [ref=f16e518]: PC
+                - generic [ref=f16e519]: Android
+                - generic [ref=f16e520]: PS Vita
+                - generic [ref=f16e521]: PlayStation 4
+                - generic [ref=f16e522]: "+7"
+            - generic [ref=f16e523]:
+              - generic [ref=f16e524]: "88"
+              - button "Add Limbo to shelf" [ref=f16e527] [cursor=pointer]
+          - article [ref=f16e529]:
+            - generic [ref=f16e532]:
+              - heading [level=2] [ref=f16e533]:
+                - link "PAYDAY 2" [ref=f16e534] [cursor=pointer]:
+                  - /url: /games/payday-2
+              - generic [ref=f16e535]:
+                - generic [ref=f16e536]: "3.5"
+                - generic [ref=f16e539]: "2013"
+                - generic [ref=f16e540]: Action · Shooter
+              - generic [ref=f16e541]:
+                - generic [ref=f16e542]: Linux
+                - generic [ref=f16e543]: PC
+                - generic [ref=f16e544]: Xbox One
+            - generic [ref=f16e545]:
+              - generic [ref=f16e546]: "79"
+              - button "Add PAYDAY 2 to shelf" [ref=f16e549] [cursor=pointer]
+          - article [ref=f16e551]:
+            - generic [ref=f16e554]:
+              - heading [level=2] [ref=f16e555]:
+                - link "DOOM (2016)" [ref=f16e556] [cursor=pointer]:
+                  - /url: /games/doom
+              - generic [ref=f16e557]:
+                - generic [ref=f16e558]: "4.4"
+                - generic [ref=f16e561]: "2016"
+                - generic [ref=f16e562]: Action · Shooter
+              - generic [ref=f16e563]:
+                - generic [ref=f16e564]: PC
+                - generic [ref=f16e565]: PlayStation 4
+                - generic [ref=f16e566]: Nintendo Switch
+                - generic [ref=f16e567]: Xbox One
+            - generic [ref=f16e568]:
+              - generic [ref=f16e569]: "85"
+              - button "Add DOOM (2016) to shelf" [ref=f16e572] [cursor=pointer]
+      - navigation "Pagination" [ref=f16e574]:
+        - generic [ref=f16e575]:
+          - link "1" [ref=f16e579] [cursor=pointer]:
+            - /url: /games
+          - link "2" [ref=f16e580] [cursor=pointer]:
+            - /url: /games?page=2
+          - link "3" [ref=f16e581] [cursor=pointer]:
+            - /url: /games?page=3
+          - generic [ref=f16e582]: …
+          - link "45,071" [ref=f16e583] [cursor=pointer]:
+            - /url: /games?page=45071
+          - link "Next page" [ref=f16e584] [cursor=pointer]:
+            - /url: /games?page=2
+        - paragraph [ref=f16e587]: Page 1 of 45,071
+  - contentinfo [ref=f16e588]:
+    - generic [ref=f16e589]:
+      - generic [ref=f16e590]:
+        - paragraph [ref=f16e591]: © 2026 GameShelf
+        - paragraph [ref=f16e592]:
+          - text: Game data by
+          - link "RAWG" [ref=f16e593] [cursor=pointer]:
+            - /url: https://rawg.io
+      - generic [ref=f16e594]:
+        - link "Email Us" [ref=f16e595] [cursor=pointer]:
+          - /url: mailto:evandriridhoh@gmail.com
+        - link "Github Account" [ref=f16e599] [cursor=pointer]:
+          - /url: https://github.com/evandri30
+        - link "Connect me" [ref=f16e603] [cursor=pointer]:
+          - /url: https://linkedin.com/in/evandriridho
+  - region "Notifications Alt+T"
+  - button "Open Next.js Dev Tools" [ref=f16e613] [cursor=pointer]
+  - alert [ref=f16e617]

@@ -30,7 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProfilePage({ params }: Props) {
     const { username } = await params
-    const [profile, session] = await Promise.all([getPublicProfile(username), getSession()])
+    // session first: its connection() marks the render as request-time before Prisma runs
+    const session = await getSession()
+    const profile = await getPublicProfile(username)
 
     const isOwner = !!profile && session?.user?.id === profile.id
     // private profiles look exactly like missing ones to everyone but the owner

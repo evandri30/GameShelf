@@ -10,7 +10,9 @@ type Props = { params: Promise<{ username: string; listId: string }> }
 
 export default async function PublicListPage({ params }: Props) {
     const { username, listId } = await params
-    const [profile, session] = await Promise.all([getPublicProfile(username), getSession()])
+    // session first: its connection() marks the render as request-time before Prisma runs
+    const session = await getSession()
+    const profile = await getPublicProfile(username)
 
     if (!profile || (!profile.isPublic && session?.user?.id !== profile.id)) notFound()
 

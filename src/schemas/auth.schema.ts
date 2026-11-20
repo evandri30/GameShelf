@@ -8,7 +8,7 @@ export const LoginSchema = z.object({
     password: z
         .string()
         .min(1, "Password is Required")
-        .min(6, "Password must be atleast 6 characters")
+        .min(6, "Password must be at least 6 characters")
 });
 
 // Rules for any new password: sign-up and password change
@@ -27,8 +27,8 @@ export const DisplayNameSchema = z
     .string()
     .trim()
     .min(1, "Name is Required")
-    .min(3, "Name must be atleast 3 characters")
-    .max(20, "Name is to long")
+    .min(3, "Name must be at least 3 characters")
+    .max(20, "Name is too long")
 
 export const RegisterSchema = z.object({
     name: DisplayNameSchema,

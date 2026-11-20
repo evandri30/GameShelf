@@ -1,0 +1,45 @@
+{
+  "cookies": [
+    {
+      "name": "tz",
+      "value": "Asia%2FJakarta",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1826167951.533848,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "authjs.csrf-token",
+      "value": "84ffe6aac2eea6c185044222108659b5f06149c1fdfa99c1eb9e5089675b4627%7Ccd9b8ea56d0b87b0928462be18b078df549830f0c0acc4a6b59a59c4f6539114",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "authjs.callback-url",
+      "value": "http%3A%2F%2Flocalhost%3A3000%2Fauth",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "authjs.session-token",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoicGZuZ284b2NZdjBUTk82YUdWanlHYkJCN0JTUG1DZ0E3TmNHX1dtN1BEYWpUb3RUM3QzUlY5VTZLT2dYaHdWcVAyN3Y4NGtiMG9mcWk3WkZIcGx1ZWcifQ..yGEGpy9vSVTfMedrTYK39g.RtMnzpgpOddVZkSzG65LgdrgZ4NekUHaqWjrpVvpaA5zOaW_pSep_eY1T8KyCrqW0z9X4KOnV24KZz0H9LCW6apdruzeAAUtM4B4znVNlXjZDVyou7YfV_J60vW72jQuNYn5gbm9M6Taq1InZXeGSr--iAWzRv0-qP9lZ1fyQiUzlvuhkoD2JBweUG3qqNPO7x4N2VfEVzdVWtHaowE6i9Qfqehc2jJmJULV_qY1iI2zpQB6OmP2MOAEo5zPdLGBnU-UsxQU4Orjr3dSfySGfg.1iSrUPm1gNLKbMsKM9aUjAnRnQmeXjYwdoiHv3jkNso",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1797223951.879241,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

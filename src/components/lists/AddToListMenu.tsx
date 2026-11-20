@@ -1,6 +1,6 @@
 "use client"
 
-import { useOptimistic, useTransition } from "react"
+import { useEffect, useOptimistic, useTransition } from "react"
 import Link from "next/link"
 import { Check, ListPlus, Plus } from "lucide-react"
 import { toast } from "react-toastify"
@@ -16,6 +16,14 @@ export default function AddToListMenu({ shelfId, lists }: { shelfId: string; lis
         state.map((l) => (l.id === listId ? { ...l, hasGame: !l.hasGame } : l))
     )
     const count = optimistic.filter((l) => l.hasGame).length
+
+    // a reload or tab close mid-request drops the save while the box already shows ticked, so ask first
+    useEffect(() => {
+        if (!isPending) return
+        const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+        window.addEventListener("beforeunload", warn)
+        return () => window.removeEventListener("beforeunload", warn)
+    }, [isPending])
 
     return (
         <Menu

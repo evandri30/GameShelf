@@ -55,6 +55,8 @@ export default function ShelfDetail({ shelf, timeZone, listsSlot }: Props) {
     const savedNotes = useRef(shelf.caption ?? "")
     const savedHours = useRef(shelf.playtime ?? 0)
     const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // what's in the textarea right now, for the unmount flush
+    const latestNotes = useRef(shelf.caption ?? "")
 
     // Only the changed field is sent, so a slow request can't overwrite another field with stale data
     const save = async (patch: UpdateShelfInput) => {
@@ -118,14 +120,28 @@ export default function ShelfDetail({ shelf, timeZone, listsSlot }: Props) {
     // Autosave notes shortly after typing stops
     const onNotesChange = (value: string) => {
         setNotes(value)
+        latestNotes.current = value
         setNotesState("idle")
         if (notesTimer.current) clearTimeout(notesTimer.current)
         notesTimer.current = setTimeout(() => saveNotes(value), AUTOSAVE_MS)
     }
 
-    useEffect(() => () => {
-        if (notesTimer.current) clearTimeout(notesTimer.current)
-    }, [])
+    // savedNotes only moves after the server confirms, so this also covers a save still in flight or one that failed
+    useEffect(() => {
+        const unsaved = () => latestNotes.current.trim() !== savedNotes.current.trim()
+        // a reload or tab close can't wait for a request, so ask first
+        const warn = (e: BeforeUnloadEvent) => {
+            if (unsaved()) e.preventDefault()
+        }
+        window.addEventListener("beforeunload", warn)
+        return () => {
+            window.removeEventListener("beforeunload", warn)
+            if (notesTimer.current) clearTimeout(notesTimer.current)
+            // leaving in-app (e.g. browser Back) before the autosave fires: send the notes instead of dropping them
+            const next = latestNotes.current.trim()
+            if (unsaved()) void updateShelf(shelf.id, { caption: next || null })
+        }
+    }, [shelf.id])
 
     const formatDate = (date: Date | null) =>
         date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone }) : null

@@ -53,7 +53,7 @@ describe("POST /api/auth/register", () => {
         const res = await register({ ...valid, email: "EVAN@test.DEV" })
 
         expect(res.status).toBe(400)
-        expect(await res.json()).toEqual({ error: "Email already exist" })
+        expect(await res.json()).toEqual({ error: "Email already exists" })
     })
 
     it("turns two simultaneous sign-ups with one email into one account and a 400", async () => {

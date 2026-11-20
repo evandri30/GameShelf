@@ -7,8 +7,8 @@ const { clientIp } = await import("@/lib/rate-limit")
 const { usernameBase } = await import("@/services/user.service")
 
 describe("clientIp", () => {
-    it("takes the first X-Forwarded-For hop", () => {
-        expect(clientIp(new Headers({ "x-forwarded-for": " 203.0.113.7 , 10.0.0.1" }))).toBe("203.0.113.7")
+    it("takes the last X-Forwarded-For hop, ignoring hops the client faked", () => {
+        expect(clientIp(new Headers({ "x-forwarded-for": "6.6.6.6, 203.0.113.7 " }))).toBe("203.0.113.7")
     })
 
     it("falls back to X-Real-IP", () => {

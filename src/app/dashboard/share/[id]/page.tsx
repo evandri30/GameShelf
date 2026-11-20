@@ -1,6 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
+// redirect-only route with no UI to stream, so it may block instead of showing a skeleton first
+export const instant = false
+
 // Old share links used the user id; public profiles now live at /u/<username>
 export default async function LegacySharePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params

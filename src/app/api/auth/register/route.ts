@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "Email already exist" },
+                { error: "Email already exists" },
                 { status: 400 }
             )
         }
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
             error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" &&
             emailForConflict && await prisma.user.findUnique({ where: { email: emailForConflict }, select: { id: true } })
         ) {
-            return NextResponse.json({ error: "Email already exist" }, { status: 400 })
+            return NextResponse.json({ error: "Email already exists" }, { status: 400 })
         }
         console.error("Register Error: ", error)
         return NextResponse.json(

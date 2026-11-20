@@ -32,7 +32,9 @@ export async function resetRateLimit(key: string) {
     await prisma.rateLimit.deleteMany({ where: { key } })
 }
 
-// First hop of X-Forwarded-For as set by the hosting proxy; falls back to a shared bucket
+// Last hop of X-Forwarded-For: the address our own reverse proxy saw. Earlier hops come from the
+// client and can be faked. Without a proxy in front, Next keeps whatever header the client sent,
+// so production must sit behind one (nginx, Caddy, Vercel) that appends or overwrites this header.
 export function clientIp(headers: Headers) {
-    return headers.get("x-forwarded-for")?.split(",")[0].trim() || headers.get("x-real-ip") || "unknown"
+    return headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || headers.get("x-real-ip") || "unknown"
 }
